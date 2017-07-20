@@ -24,7 +24,11 @@ Linux
 ```
 source VENV_NAME/bin/activate
 ```
-
+### Install the requirements
+Navigate to cloned_repo/
+```
+pip install -r
+```
 ### Create a .env file
 Create a .env file in project_dir/cloned_repo/opengisproj/opengisproj with
 following data:
