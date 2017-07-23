@@ -8,7 +8,7 @@ def demo(request):
     return HttpResponse("OK")
 
 def home(request):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated == True:
         f = get_meta_fields()
         return render(request, 'index.html', {'meta_fields':f})
     else:
