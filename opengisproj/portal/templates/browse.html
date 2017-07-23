@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Browse::Portal{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'portal/css/bootstrap-table.min.css' %}" />
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <h1 class="text-center">Browse</h1>
+        <h3 class="text-center loading-text">Loading Table</h3>
+        <div class="container">
+            <table id="gisDataTable">
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'portal/js/bootstrap-table.min.js' %}"></script>
+    <script>
+        var metaFields = [], gisData = [];
+        function init(){
+            getmetafields(populateMetaFields);
+            getGisData(processData);
+            setTimeout(function(){
+                $("#gisDataTable").bootstrapTable({
+                    columns: metaFields,
+                    data: gisData,
+                    idField: "id",
+                    clickToSelect: true,
+                    pagination: true,
+                    pageSize: 10,
+                    search: true,
+                    showColumns: true,
+                    showToggle: true,
+                    singleSelect: true
+                });
+                $(".loading-text").hide();
+            },3000);
+            
+        }
+        function populateMetaFields(data){
+            metaFields.push({field: "id", title: "Id", sortable:true});
+            $.each(data, function(i,v){
+                var temp = {field: v.key_name, title: v.label, sortable:true};
+                metaFields.push(temp);
+            });
+        }
+        function processData(data){
+            $.each(data, function(i,v){
+                gisData.push(v);
+            });
+        }
+        init();
+    </script>
+{% endblock %}

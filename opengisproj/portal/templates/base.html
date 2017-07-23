@@ -1,0 +1,27 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{% block title %} {% endblock %}</title>
+        <link rel="stylesheet" href="{% static 'portal/css/bootstrap.min.css' %}" />
+        <link rel="stylesheet" href="{% static 'portal/css/main.css' %}" />
+        {% block css %}
+        {% endblock %}
+    </head>
+    <body>
+        {% include 'partials/menu.html' %}
+        <section id="content">
+            <div class="container">
+                {% block content %}
+                    This is browse view. Edit me in /portal/templates/browse.html
+                {% endblock %}
+            </div>
+        </section>
+        <script src="{% static 'portal/js/jquery.min.js' %}"></script>
+        <script src="{% static 'portal/js/bootstrap.min.js' %}"></script>
+        <script src="{% static 'portal/js/functions.js' %}"></script>
+        {% block js %}
+        {% endblock %}
+
+    </body>
+</html>
