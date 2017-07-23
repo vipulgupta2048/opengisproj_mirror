@@ -1,0 +1,22 @@
+.login-div{
+  background: #f4f4f4;
+  position: absolute;
+  width: 300px;
+  height: 250px;
+  z-index: 15;
+  top: 30%;
+  left: 50%;
+  margin: -100px 0 0 -150px;
+  box-shadow: 0px 0px 5px #cccccc;
+  border-radius: 25px;
+  text-align: center;
+  color: #373737;
+}
+
+body{
+  background: white;
+}
+
+h2{
+
+}
