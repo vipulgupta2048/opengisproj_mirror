@@ -128,4 +128,4 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 #Login redirect
-LOGIN_REDIRECT_URL = '/account/'
+LOGIN_REDIRECT_URL = '/portal/'
