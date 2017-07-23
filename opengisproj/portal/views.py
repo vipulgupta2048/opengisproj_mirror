@@ -10,7 +10,7 @@ def demo(request):
 def home(request):
     if request.user.is_authenticated == True:
         f = get_meta_fields()
-        return render(request, 'index.html', {'meta_fields':f})
+        return render(request, 'portal/index.html', {'meta_fields':f})
     else:
         return redirect('/admin/')
 
@@ -18,16 +18,16 @@ def add(request):
     if request.user.is_authenticated == False:
         return redirect('/admin/')
     f = get_meta_fields()
-    return render(request, 'add-new.html', {'meta_fields':f})
+    return render(request, 'portal/add-new.html', {'meta_fields':f})
 
 def browse(request):
     if request.user.is_authenticated == False:
         return redirect('/admin/')
-    return render(request, 'browse.html')
+    return render(request, 'portal/browse.html')
 def addParam(request):
     if request.user.is_authenticated == False:
         return redirect('/admin/')
-    return render(request, 'add-param.html')
+    return render(request, 'portal/add-param.html')
 
 def processAjax(request, action):
     if request.user.is_authenticated == False:
