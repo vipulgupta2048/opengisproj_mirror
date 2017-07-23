@@ -12,21 +12,21 @@ def home(request):
         f = get_meta_fields()
         return render(request, 'portal/index.html', {'meta_fields':f})
     else:
-        return redirect('/account/login')
+        return redirect('/account/login?next=/portal/home')
 
 def add(request):
     if request.user.is_authenticated == False:
-        return redirect('/account/login/')
+        return redirect('/account/login?next=/portal/add')
     f = get_meta_fields()
     return render(request, 'portal/add-new.html', {'meta_fields':f})
 
 def browse(request):
     if request.user.is_authenticated == False:
-        return redirect('/account/login')
+        return redirect('/account/login?next=/portal/browse')
     return render(request, 'portal/browse.html')
 def addParam(request):
     if request.user.is_authenticated == False:
-        return redirect('/account/login')
+        return redirect('/account/login?next=/portal/parameters')
     return render(request, 'portal/add-param.html')
 
 def processAjax(request, action):
