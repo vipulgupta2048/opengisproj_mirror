@@ -71,7 +71,7 @@
                 }
             });
             element.addClass("edit-mode");
-            element.html('<div class="form-group"><input '+field_attr+' value="'+value+'" class="form-control editGisDataInput"><br><i class="glyphicon glyphicon-remove pull-right icon-btn"></i><i class="glyphicon glyphicon-ok submitEditGisDataBtn pull-right icon-btn"></i></div>');
+            element.html('<div class="form-group"><input '+field_attr+' value="'+value+'" class="form-control editGisDataInput"><br><i class="glyphicon glyphicon-remove pull-right icon-btn closeEditGisDataBtn"></i><i class="glyphicon glyphicon-ok submitEditGisDataBtn pull-right icon-btn"></i></div>');
             gisTable.bootstrapTable('resetView');
             var gisInput = element.find(".editGisDataInput");
             gisInput.on("keydown", function(e){
@@ -83,6 +83,10 @@
             });
             element.find(".submitEditGisDataBtn").on("click", function(){
                 processEditGisDataInput(gisInput, key, data_id);
+            });
+            element.find(".closeEditGisDataBtn").on("click",function(){
+                element.html(value);
+                element.removeClass("edit-mode");
             });
         }
         function processEditGisDataInput(field, key, data_id){
