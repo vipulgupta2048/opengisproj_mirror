@@ -15,13 +15,14 @@ class gis_data_meta(models.Model):
     key = models.CharField(max_length=100)
     value = models.TextField()
     data = models.ForeignKey(gis_data,on_delete=models.CASCADE)
-
+    
     class Meta:
         db_table = "gis_data_meta"
 
 class options(models.Model):
     option_name = models.CharField(max_length=100)
     value = models.TextField()
-
+    is_removable = models.BooleanField(default=False)
+    
     class Meta:
         db_table = "options"
