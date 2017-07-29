@@ -1,6 +1,8 @@
 {% load static %}
 <script src="{% static 'portal/js/bootstrap-table.min.js' %}"></script>
     <script>
+        var gisTable = $("#gisDataTable");
+        var tableError = $(".table-error")
         var metaFields = [], gisData = [];
         function loadGisDataTable(table){
             getmetafields(populateMetaFields);
@@ -11,6 +13,7 @@
                         columns: metaFields,
                         data: gisData,
                         idField: "id",
+                        uniqueId: "id",
                         clickToSelect: true,
                         pagination: true,
                         pageSize: 10,
@@ -19,17 +22,24 @@
                         showToggle: true,
                         singleSelect: true
                     });
-                    $(".loading-text").hide();
+                    bindGisDataRemove();
+                    $(".loading-text").hide();        
                 }
             },3000);
             
         }
         function populateMetaFields(data){
-            metaFields.push({field: "id", title: "Id", sortable:true});
+            metaFields.push({field: 'state', checkbox: true, align: 'center'});
+            metaFields.push({field: "id", title: "Id"});
             $.each(data, function(i,v){
                 var temp = {field: v.key_name, title: v.label, sortable:true};
                 metaFields.push(temp);
             });
+            metaFields.push({field: 'action', title: 'Actions', align: 'center', formatter: actionFormatter});
+            function actionFormatter(value, row, index){
+                html = '<a href="#" class="gisDataRemoveBtn"><i class="glyphicon glyphicon-remove"></i></a>';
+                return html;
+            }
             meta_loaded = true;
         }
         function processData(data){
@@ -37,6 +47,46 @@
                 gisData.push(v);
             });
             data_loaded = true;
+        }
+        function bindGisDataRemove(){
+            $(".gisDataRemoveBtn").one("click", function(e){
+                e.preventDefault();
+                removeGisData($(this).parents("tr"));
+            });
+        }
+        function removeGisData(row){
+            $(".gisDataRemoveBtn").off("click");
+            var id = row.attr("data-uniqueid");
+            var r = confirm("This will delete all data associated with id #"+id);
+            if(r == true){
+                $.ajax({
+                    url: apiURI + 'removedata',
+                    data: "id="+id+"&csrfmiddlewaretoken="+'{{ csrf_token }}',
+                    dataType: "JSON",
+                    method: "POST",
+                    success: function(response){
+                        r = response;
+                        processResponse(r);
+                    },
+                    error: function(response){
+                        console.log(response);
+                    }
+                });
+            }else{
+                bindGisDataRemove();
+            }
+            function processResponse(r){
+                if(r.status == "success"){
+                    $("#gisDataTable").bootstrapTable('removeByUniqueId',id);
+                }else{
+                    if(r.status == "error"){
+                        tableError.fadeOut();
+                        tableError.html("Unable to Delete due to "+r.msg);
+                        tableError.fadeIn();
+                    }   
+                }
+                bindGisDataRemove();
+            }
         }
         loadGisDataTable($("#gisDataTable"));
     </script>
