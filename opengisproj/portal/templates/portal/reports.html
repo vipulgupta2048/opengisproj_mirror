@@ -48,7 +48,8 @@
             var marker = new google.maps.Marker({
                 position: coord,
                 map: map,
-                title: v.sample_identifier
+                title: v.sample_identifier,
+                label: v.id
             });
             marker.addListener('click', function() {
                 showGisDetails(v.id);
