@@ -70,5 +70,12 @@ def processAjax(request, action):
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="removedata":
+        if(request.method == "POST"):
+            post_data = request.POST
+            res = remove_gis_data(data_id=post_data['id'], user=request.user)
+            return JsonResponse(res, safe=False)
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
     else:
         return JsonResponse("Invalid Action", safe=False)

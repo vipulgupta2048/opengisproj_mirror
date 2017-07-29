@@ -115,3 +115,23 @@ def remove_param(option_id, user):
             toReturn['msg'] = "Option Cannot be Removed"
             toReturn['errcode'] = "OPTION_IS_NOT_REMOVABLE"
     return toReturn
+
+def remove_gis_data(data_id, user):
+    obj = gis_data.objects.filter(id=data_id)
+    toReturn = {}
+    if not obj:
+        toReturn['status'] = "error"
+        toReturn['msg'] = "Data Id Not Found"
+        toReturn['errcode'] = "DATA_DOES_NOT_EXIST"
+    else:
+        obj_meta = gis_data_meta.objects.filter(data_id=data_id)
+        obj_meta.delete()
+        obj.delete()
+        temp = gis_data.objects.filter(id=data_id)
+        if not temp:
+            toReturn['status'] = "success"
+        else:
+            toReturn['status'] = "error"
+            toReturn['msg'] = "Internal Error"
+            toReturn['errcode'] = "INTERNAL_ERROR"
+    return toReturn
