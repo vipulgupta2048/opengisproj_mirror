@@ -22,7 +22,7 @@ class gis_data_meta(models.Model):
 class options(models.Model):
     option_name = models.CharField(max_length=100)
     value = models.TextField()
-    is_removable = models.BooleanField(default=True)
+    is_removable = models.BooleanField(default=False)
     
     class Meta:
         db_table = "options"

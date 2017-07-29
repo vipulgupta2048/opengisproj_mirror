@@ -71,6 +71,7 @@ def add_new_data(post_data, request_user, ret_json=False):
 def add_param(data, user):
     toReturn = {}
     param = {}
+    removable = False
     if(is_meta_key(data['key_name'])):
         toReturn["status"] = "error"
         toReturn["message"] = "Key Already Exists"
@@ -83,9 +84,12 @@ def add_param(data, user):
                 continue
             if x=="required":
                 val="True"
+            if x=="is_removable":
+                removable = True
+                continue
             param[key] = val
         jsonParam = json.dumps(param)
-        p = options.objects.create(option_name="meta_field",value=jsonParam)
+        p = options.objects.create(option_name="meta_field",value=jsonParam, is_removable = removable)
         p.save()
         toReturn["status"] = "success"
         toReturn["message"] = str(p.id)
@@ -103,6 +107,8 @@ def remove_param(option_id, user):
             fields = json.loads(str(obj[0].value))
             keyName = fields['key_name']
             meta_rows = gis_data_meta.objects.filter(key=keyName)
+            meta_rows.delete()
+            obj.delete()  
             toReturn['status'] = "success"
         else:
             toReturn['status'] = "error"
