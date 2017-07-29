@@ -135,3 +135,16 @@ def remove_gis_data(data_id, user):
             toReturn['msg'] = "Internal Error"
             toReturn['errcode'] = "INTERNAL_ERROR"
     return toReturn
+
+def edit_gis_data(meta_key, data_id, new_value, user):
+    obj = gis_data_meta.objects.get(key=meta_key, data=data_id)
+    toReturn = {}
+    if not obj:
+        toReturn['status'] = "error"
+        toReturn['msg'] = "Data Id Not Found"
+        toReturn['errcode'] = "DATA_DOES_NOT_EXIST"
+    else:
+        obj.value = new_value
+        obj.save()
+        toReturn['status'] = "success"
+    return toReturn

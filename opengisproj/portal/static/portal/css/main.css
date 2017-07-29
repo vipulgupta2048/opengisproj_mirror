@@ -14,3 +14,7 @@
 .height-80{
     height: 80vh;
 }
+.icon-btn{
+    padding:0.5em;
+    cursor: pointer;
+}
