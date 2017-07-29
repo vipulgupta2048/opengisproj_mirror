@@ -43,12 +43,21 @@
     }
     function loadGisDataToMap(data){
         $.each(data, function(i,v){
+            console.log(v);
             var coord = {lat: parseFloat(v.latitude) , lng: parseFloat(v.longitude) };
             var marker = new google.maps.Marker({
                 position: coord,
-                map: map
+                map: map,
+                title: v.sample_identifier,
+                label: v.id
+            });
+            marker.addListener('click', function() {
+                showGisDetails(v.id);
             });
         });
+    }
+    function showGisDetails(id){
+        console.log(id);
     }
     get_curr_cord();
 </script>
