@@ -3,15 +3,15 @@ from .models import *
 import json
 
 def install(user):
-    temp = options.objects.create(option_name="meta_field",value='{"key_name": "bod", "label": "BOD", "key_type": "text", "min": "", "max": "", "max_len": "", "step": "", "required": "True"}')
+    temp = options.objects.create(option_name="meta_field",value='{"key_name": "bod", "label": "BOD", "key_type": "number", "min": "", "max": "", "max_len": "", "step": "0.000001", "required": "True"}')
     temp.save()
-    temp = options.objects.create(option_name="meta_field",value='{"key_name": "ph", "label": "ph Value", "key_type": "text", "min": "", "max": "", "max_len": "", "step": "", "required": "True"}')
+    temp = options.objects.create(option_name="meta_field",value='{"key_name": "ph", "label": "ph Value", "key_type": "number", "min": "", "max": "", "max_len": "", "step": "0.00001", "required": "True"}')
     temp.save()
-    temp = options.objects.create(option_name="meta_field",value='{"key_name": "longitude", "label": "Longitude", "key_type": "number", "min": "-180", "max": "180", "max_len": "", "step": "0.000001", "required": "True"}')
+    temp = options.objects.create(option_name="meta_field",value='{"key_name": "longitude", "label": "Longitude", "key_type": "number", "min": "-180", "max": "180", "max_len": "", "step": "0.000001", "required": "True"}', is_removable=False)
     temp.save()
-    temp = options.objects.create(option_name="meta_field",value='{"key_name": "latitude", "label": "Latitude", "key_type": "number", "min": "-90", "max": "90", "max_len": "", "step": "0.000001", "required": "True"}')
+    temp = options.objects.create(option_name="meta_field",value='{"key_name": "latitude", "label": "Latitude", "key_type": "number", "min": "-90", "max": "90", "max_len": "", "step": "0.000001", "required": "True"}', is_removable=False)
     temp.save()
-    temp = options.objects.create(option_name="meta_field",value='{"key_name": "year", "label": "Year", "key_type": "number", "min": "1947", "max": "2100", "max_len": "", "step": ""}')
+    temp = options.objects.create(option_name="meta_field",value='{"key_name": "year", "label": "Year", "key_type": "number", "min": "1947", "max": "2100", "max_len": "", "step": ""}', is_removable=False)
     temp.save()
 
 def get_meta_fields(getjson=False):
@@ -23,6 +23,7 @@ def get_meta_fields(getjson=False):
         for x in fields:
             temp[x] = fields[x]
         temp["id"] = d.id
+        temp["is_removable"] = d.is_removable
         jsonFields.append(temp)
     return jsonFields
 
@@ -98,9 +99,13 @@ def remove_param(option_id, user):
         toReturn['msg'] = "Option Id Not Found"
         toReturn['errcode'] = "OPTION_DOES_NOT_EXIST"
     else:
-        fields = json.loads(str(obj[0].value))
-        keyName = fields['key_name']
-        meta_rows = gis_data_meta.objects.filter(key=keyName).delete()
-        obj.delete()
-        toReturn['status'] = "success"
+        if(obj[0].is_removable):
+            fields = json.loads(str(obj[0].value))
+            keyName = fields['key_name']
+            meta_rows = gis_data_meta.objects.filter(key=keyName)
+            toReturn['status'] = "success"
+        else:
+            toReturn['status'] = "error"
+            toReturn['msg'] = "Option Cannot be Removed"
+            toReturn['errcode'] = "OPTION_IS_NOT_REMOVABLE"
     return toReturn

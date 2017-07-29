@@ -12,7 +12,7 @@
         <div class="row">
             <div class="container">
                 <h3 class="text-center loading-text">Fetching Existing Fields</h3>
-                <h4 class="text-center text=danger table-error"></h4>
+                <h4 class="text-center text-danger table-error"></h4>
                 <table id="gisParamTable"></table>
             </div>
         </div>
@@ -190,13 +190,17 @@
                             console.log(response);
                         }
                     });
+                }else{
+                    bindParamRemove();
                 }
                 function processResponse(r){
                     if(r.status == "success"){
                         $("#gisParamTable").bootstrapTable('removeByUniqueId',id);
                     }else{
                         if(r.status == "error"){
+                            tableError.fadeOut();
                             tableError.html("Unable to Delete due to "+r.msg);
+                            tableError.fadeIn();
                         }   
                     }
                     bindParamRemove();
