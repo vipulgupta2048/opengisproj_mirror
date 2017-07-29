@@ -77,5 +77,12 @@ def processAjax(request, action):
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="editdata":
+        if(request.method == "POST"):
+            post_data = request.POST
+            res = edit_gis_data(meta_key=post_data['key'],data_id=post_data['dataId'],new_value=post_data['value'], user=request.user)
+            return JsonResponse(res, safe=False)
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
     else:
         return JsonResponse("Invalid Action", safe=False)

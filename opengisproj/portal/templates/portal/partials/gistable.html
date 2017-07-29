@@ -2,8 +2,8 @@
 <script src="{% static 'portal/js/bootstrap-table.min.js' %}"></script>
     <script>
         var gisTable = $("#gisDataTable");
-        var tableError = $(".table-error")
-        var metaFields = [], gisData = [];
+        var tableError = $("#gisDataTableError");
+        var metaFields = [], gisData = [], metaFieldsRaw;
         function loadGisDataTable(table){
             getmetafields(populateMetaFields);
             getGisData(processData);
@@ -20,17 +20,20 @@
                         search: true,
                         showColumns: true,
                         showToggle: true,
-                        singleSelect: true
+                        singleSelect: true,
+                        onDblClickCell: editcelldata,
                     });
+                    gisTable = table;
                     bindGisDataRemove();
-                    $(".loading-text").hide();        
+                    $(".loading-text").hide();
                 }
             },3000);
             
         }
         function populateMetaFields(data){
+            metaFieldsRaw = data;
             metaFields.push({field: 'state', checkbox: true, align: 'center'});
-            metaFields.push({field: "id", title: "Id"});
+            metaFields.push({field: "id", title: "Id", editable: false});
             $.each(data, function(i,v){
                 var temp = {field: v.key_name, title: v.label, sortable:true};
                 metaFields.push(temp);
@@ -41,6 +44,99 @@
                 return html;
             }
             meta_loaded = true;
+        }
+        function editcelldata(field, value, row, element){
+            if(element.hasClass("edit-mode"))
+                return false;
+            var key = field;
+            if(key == "id" || key=="state" || key=="action")
+                return false;
+            var prevValue = value;
+            var data_id = row["id"];
+            var field_attr = "";
+            $.each(metaFieldsRaw, function(i,v){
+                if(v.key_name == key){
+                    field_attr+=' type="'+v.key_type+'"';
+                    if(v.min!="Null" && v.min!="undefined")
+                        field_attr+=' min="'+v.min+'"';
+                    if(v.max!="Null" && v.max!="undefined")
+                        field_attr+=' max="'+v.max+'"';
+                    if(v.step!="Null" && v.step!="undefined")
+                        field_attr+=' step="'+v.step+'"';
+                    if(v.max_len!="Null" && v.max_len!="undefined")
+                        field_attr+=' max-len="'+v.max_len+'"';
+                    if(v.required!="Null" && v.required!=undefined && v.required!="undefined" && v.required=="True") 
+                        field_attr+=' required';
+                    return false;
+                }
+            });
+            element.addClass("edit-mode");
+            element.html('<div class="form-group"><input '+field_attr+' value="'+value+'" class="form-control editGisDataInput"><br><i class="glyphicon glyphicon-remove pull-right icon-btn"></i><i class="glyphicon glyphicon-ok submitEditGisDataBtn pull-right icon-btn"></i></div>');
+            gisTable.bootstrapTable('resetView');
+            var gisInput = element.find(".editGisDataInput");
+            gisInput.on("keydown", function(e){
+                $this = $(this);
+                if(e.keyCode==13){
+                    e.preventDefault();
+                    processEditGisDataInput($this, key, data_id);
+                }
+            });
+            element.find(".submitEditGisDataBtn").on("click", function(){
+                processEditGisDataInput(gisInput, key, data_id);
+            });
+        }
+        function processEditGisDataInput(field, key, data_id){
+            if(validateField(field)){
+                field.off("keydown");
+                field.attr("disabled","disabled");
+                var submitEditGisDataBtn = field.parents("td").find(".submitEditGisDataBtn");
+                submitEditGisDataBtn.removeClass("glyphicon-ok").addClass("glyphicon-refresh").off("click");
+                var value = field.val();
+                var data = "key="+key+"&dataId="+data_id+"&value="+value+"&csrfmiddlewaretoken={{ csrf_token }}";
+                $.ajax({
+                    url: apiURI+"editdata",
+                    type: "POST",
+                    data: data,
+                    dataType: "JSON",
+                    success: function(response){
+                        r = response;
+                        processResponse(r);
+                    }
+                });
+                function processResponse(r){
+                    if(r.status == "success"){
+                        var cell = field.parents("td");
+                        cell.css("transition","1s");
+                        cell.addClass("bg-success");
+                        setTimeout(function(){
+                            cell.removeClass("bg-success");
+                        },2000);
+                        cell.removeClass("edit-mode");
+                        cell.html(value);
+                        var ind = gisTable.find("tr").index(cell.parents("tr"))-1;
+                        gisTable.bootstrapTable('updateCell',{index:ind, field:key, value:value});
+                        gisTable.bootstrapTable('resetView');  
+                        tableError.fadeOut();
+                        tableError.removeClass("alert-danger").addClass("alert-success").html("Successfully Updated!").fadeIn();
+                    }else{
+                        if(r.status == "error"){
+                            field.tooltip({title:r.msg, trigger: "manual", placement:"auto bottom"});
+                            field.tooltip("show");
+                            submitEditGisDataBtn.on("click", function(){processEditGisDataInput(field,key,data_id);})
+                            field.removeAttr("disabled");
+                            field.on("keydown", function(e){
+                                if(e.keyCode == 13){
+                                    e.preventDefault();
+                                    processEditGisDataInput($(this), key, data_id);
+                                }
+                            });
+                            submitEditGisDataBtn.removeClass("glyphicon-refresh").addClass("glyphicon-ok");
+                            tableError.fadeOut();
+                            tableError.removeClass("alert-success").addClass("alert-danger").html("Successfully Updated!").fadeIn();    
+                        }
+                    }
+                }
+            }
         }
         function processData(data){
             $.each(data, function(i,v){
@@ -81,6 +177,7 @@
                 }else{
                     if(r.status == "error"){
                         tableError.fadeOut();
+                        tableError.removeClass("alert-success").addClass("alert-danger");
                         tableError.html("Unable to Delete due to "+r.msg);
                         tableError.fadeIn();
                     }   
@@ -88,5 +185,5 @@
                 bindGisDataRemove();
             }
         }
-        loadGisDataTable($("#gisDataTable"));
+        loadGisDataTable(gisTable);
     </script>
