@@ -1,0 +1,42 @@
+{% load static %}
+<script src="{% static 'portal/js/bootstrap-table.min.js' %}"></script>
+    <script>
+        var metaFields = [], gisData = [];
+        function loadGisDataTable(table){
+            getmetafields(populateMetaFields);
+            getGisData(processData);
+            var tableLoadedTimer = setInterval(function(){
+                if(meta_loaded == true && data_loaded == true){
+                    table.bootstrapTable({
+                        columns: metaFields,
+                        data: gisData,
+                        idField: "id",
+                        clickToSelect: true,
+                        pagination: true,
+                        pageSize: 10,
+                        search: true,
+                        showColumns: true,
+                        showToggle: true,
+                        singleSelect: true
+                    });
+                    $(".loading-text").hide();
+                }
+            },3000);
+            
+        }
+        function populateMetaFields(data){
+            metaFields.push({field: "id", title: "Id", sortable:true});
+            $.each(data, function(i,v){
+                var temp = {field: v.key_name, title: v.label, sortable:true};
+                metaFields.push(temp);
+            });
+            meta_loaded = true;
+        }
+        function processData(data){
+            $.each(data, function(i,v){
+                gisData.push(v);
+            });
+            data_loaded = true;
+        }
+        loadGisDataTable($("#gisDataTable"));
+    </script>

@@ -8,6 +8,7 @@ urlpatterns = [
     url(r'^add/?$', views.add),
     url(r'^browse/?$', views.browse),
     url(r'^parameters/?$', views.addParam),
+    url(r'^reports/?$', views.reports),
     url(r'^ajax/(?P<action>[a-zA-Z]*)/?$', views.processAjax),
     url(r'^install/?$', views.demo),
     url(r'', RedirectView.as_view(url="/portal/home/", permanent=True))

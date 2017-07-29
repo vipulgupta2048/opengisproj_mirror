@@ -28,6 +28,10 @@ def addParam(request):
     if request.user.is_authenticated == False:
         return redirect('/account/login?next=/portal/parameters')
     return render(request, 'portal/add-param.html')
+def reports(request):
+    if request.user.is_authenticated == False:
+        return redirect('/accounts/login?next=/portal/reports')
+    return render(request, 'portal/reports.html')
 
 def processAjax(request, action):
     if request.user.is_authenticated == False:

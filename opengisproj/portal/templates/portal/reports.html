@@ -1,0 +1,57 @@
+{% extends 'portal/base.html' %}
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+    <section class="height-80">
+        <div class="container height-inherit">
+            <div id="gisMap" class="height-inherit"></div>
+        </div>
+    </section>
+    <section>
+        <div class="container">
+            <br>
+            <table id="gisDataTable"></table>
+        </div>
+    </section>
+{% endblock %}
+
+{% block js %}
+<script>
+    var map;
+    var mapsContainer = $("#gisMap")[0];
+    var cent_lat = 28.644800; //Delhi 
+    var cent_long = 77.216721; //Delhi
+    function get_curr_cord(){
+        if(navigator.geolocation){
+            navigator.geolocation.getCurrentPosition(storePos);
+        }
+    }
+    function storePos(position){
+        cent_lat = position.coords.latitude;
+        cent_long = position.coords.longitude;
+        var api_checker = setInterval(function(){if(api_loaded){showMap();clearInterval(api_checker);}},500);
+    }
+    function initMap(){
+        api_loaded = true;
+    }
+    function showMap(){
+        map = new google.maps.Map(mapsContainer, {
+            center: {lat: cent_lat, lng: cent_long },
+            zoom: 6
+        });
+        getGisData(loadGisDataToMap);
+    }
+    function loadGisDataToMap(data){
+        $.each(data, function(i,v){
+            var coord = {lat: parseFloat(v.latitude) , lng: parseFloat(v.longitude) };
+            var marker = new google.maps.Marker({
+                position: coord,
+                map: map
+            });
+        });
+    }
+    get_curr_cord();
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD2DVlvcLu7o2m-6OhfbipppHEzRofJh48&callback=initMap"></script>
+{% include 'portal/partials/gistable.html' %}
+{% endblock %}

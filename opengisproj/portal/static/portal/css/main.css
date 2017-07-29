@@ -8,3 +8,9 @@
 .width-inherit{
     width:inherit;
 }
+.height-inherit{
+    height: inherit;
+}
+.height-80{
+    height: 80vh;
+}
