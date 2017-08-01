@@ -2,18 +2,32 @@
 {% block title %}Reports{% endblock %}
 
 {% block content %}
-    <section class="height-80">
-        <div class="container height-inherit">
-            <div id="gisMap" class="height-inherit"></div>
+        <div class="row width-100-p no-margin">
+            <section class="pull-left height-100 col-md-3 overflow-scroll">
+                <div class="text-center alert"  id="gisDataTableError"></div>
+                <table id="gisDataTable"></table>
+            </section>
+            <section class="pull-left height-100 col-md-9 no-padding">
+                <div class="container height-inherit no-margin no-padding width-100-p">
+                    <div id="gisMap" class="height-inherit"></div>
+                </div>
+            </section>
         </div>
-    </section>
-    <section>
-        <div class="container">
-            <br>
-            <div class="text-center alert"  id="gisDataTableError"></div>
-            <table id="gisDataTable"></table>
+        <div class="modal fade" tabindex="-1" role="dialog" id="gisModal">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Test Title</h4>
+                    </div>
+                    <div class="modal-body">
+                        Test content
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
         </div>
-    </section>
 {% endblock %}
 
 {% block js %}
@@ -22,6 +36,7 @@
     var mapsContainer = $("#gisMap")[0];
     var cent_lat = 28.644800; //Delhi 
     var cent_long = 77.216721; //Delhi
+    var data_cache;
     function get_curr_cord(){
         if(navigator.geolocation){
             navigator.geolocation.getCurrentPosition(storePos);
@@ -56,9 +71,22 @@
                 showGisDetails(v.id);
             });
         });
+        data_cache = data;
     }
     function showGisDetails(id){
-        console.log(id);
+        var gisModal = $("#gisModal");
+        $.each(data_cache, function(i,v){
+            if(parseInt(v.id) == parseInt(id)){
+                gisModal.find(".modal-title").html(v.sample_identifier);
+                var html = "Dumping Raw Data<br>";
+                $.each(v, function(index,value){
+                    html += "<br>"+index+":"+value;
+                });
+                gisModal.find(".modal-body").html(html);
+                return false;
+            }
+        });
+        gisModal.modal();
     }
     get_curr_cord();
 </script>
