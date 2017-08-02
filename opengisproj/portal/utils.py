@@ -15,58 +15,86 @@ def install(user):
     temp.save()
 
 def get_meta_fields(getjson=False):
-    data = options.objects.filter(option_name="meta_field")
-    jsonFields = []
-    for d in data:
-        temp = {}
-        fields = json.loads(str(d.value))
-        for x in fields:
-            temp[x] = fields[x]
-        temp["id"] = d.id
-        temp["is_removable"] = d.is_removable
-        jsonFields.append(temp)
-    return jsonFields
+    try:
+        data = options.objects.filter(option_name="meta_field")
+        jsonFields = []
+        for d in data:
+            temp = {}
+            fields = json.loads(str(d.value))
+            for x in fields:
+                temp[x] = fields[x]
+            temp["id"] = d.id
+            temp["is_removable"] = d.is_removable
+            jsonFields.append(temp)
+        return jsonFields
+    except Exception as e:
+        toReturn = {}
+        toReturn["status"] = "error"
+        toReturn["msg"] = type(e) + e.message
+        toReturn["errcode"] = "500"
+        return toReturn
 
 def get_meta():
-    gis_objects = gis_data.objects.all()    #Fetch all rows from gis_data
-    arr = []    #Create a new array to return
-    for x in gis_objects:
-        obj = {}    #Create new empty dictionary
-        gis_id = x.id
-        obj["id"] = str(gis_id)  #Add Id to dictionary
-        gis_meta = gis_data_meta.objects.filter(data=gis_id)    #Fetch all rows from gis_data_meta that contain data for gis_id 
-        for y in gis_meta:
-            obj[y.key] = y.value    #Add Every Key to dictionary with it's value
-        arr.append(obj)    #Add Current Dictionary to arr
-    return arr  #return the final arr
+    try:
+        gis_objects = gis_data.objects.all()    #Fetch all rows from gis_data
+        arr = []    #Create a new array to return
+        for x in gis_objects:
+            obj = {}    #Create new empty dictionary
+            gis_id = x.id
+            obj["id"] = str(gis_id)  #Add Id to dictionary
+            gis_meta = gis_data_meta.objects.filter(data=gis_id)    #Fetch all rows from gis_data_meta that contain data for gis_id 
+            for y in gis_meta:
+                obj[y.key] = y.value    #Add Every Key to dictionary with it's value
+            arr.append(obj)    #Add Current Dictionary to arr
+        return arr  #return the final arr
+    except Exception as e:
+        toReturn = {}
+        toReturn["status"] = "error"
+        toReturn["msg"] = type(e) + e.message
+        toReturn["errcode"] = "500"
+        return toReturn
 
 def is_meta_key(key):
-    fields = get_meta_fields()
-    flag = False
-    for x in fields:
-        if x['key_name'] == key:
-            flag = True
-            break
-    return flag
+    try: 
+        fields = get_meta_fields()
+        flag = False
+        for x in fields:
+            if x['key_name'] == key:
+                flag = True
+                break
+        return flag
+    except Exception as e:
+        toReturn = {}
+        toReturn["status"] = "error"
+        toReturn["msg"] = type(e) + e.message
+        toReturn["errcode"] = "500"
+        return toReturn
 
 def add_new_data(post_data, request_user, ret_json=False):
-    is_first = True
-    gis_id = -1
-    for x in post_data:
-        key = x
-        val = post_data[key]
-        if(is_meta_key(key)):
-            if(is_first):
-                g = gis_data.objects.create(created_by=request_user)
-                g.save()
-                gis_id = g
-                is_first=False
-            m = gis_data_meta.objects.create(key=key, value=val, data=gis_id)
-            m.save()
-    if(ret_json):
-        return {"id":str(gis_id.id)}
-    else:
-        return gis_id.id
+    try:
+        is_first = True
+        gis_id = -1
+        for x in post_data:
+            key = x
+            val = post_data[key]
+            if(is_meta_key(key)):
+                if(is_first):
+                    g = gis_data.objects.create(created_by=request_user)
+                    g.save()
+                    gis_id = g
+                    is_first=False
+                m = gis_data_meta.objects.create(key=key, value=val, data=gis_id)
+                m.save()
+        if(ret_json):
+            return {"id":str(gis_id.id)}
+        else:
+            return gis_id.id
+    except Exception as e:
+        toReturn = {}
+        toReturn["status"] = "error"
+        toReturn["msg"] = type(e) + e.message
+        toReturn["errcode"] = "500"
+        return toReturn
 
 def add_param(data, user):
     toReturn = {}
@@ -88,63 +116,87 @@ def add_param(data, user):
                 removable = True
                 continue
             param[key] = val
-        jsonParam = json.dumps(param)
-        p = options.objects.create(option_name="meta_field",value=jsonParam, is_removable = removable)
-        p.save()
-        toReturn["status"] = "success"
-        toReturn["message"] = str(p.id)
+        try:
+            jsonParam = json.dumps(param)
+            p = options.objects.create(option_name="meta_field",value=jsonParam, is_removable = removable)
+            p.save()
+            toReturn["status"] = "success"
+            toReturn["message"] = str(p.id)
+        except Exception as e:
+            toReturn["status"] = "error"
+            toReturn["msg"] = type(e) + e.message
+            toReturn["errcode"] = "500"
+
     return toReturn
 
 def remove_param(option_id, user):
-    obj = options.objects.filter(id=option_id)
-    toReturn = {}
-    if not obj:
-        toReturn['status'] = "error"
-        toReturn['msg'] = "Option Id Not Found"
-        toReturn['errcode'] = "OPTION_DOES_NOT_EXIST"
-    else:
-        if(obj[0].is_removable):
-            fields = json.loads(str(obj[0].value))
-            keyName = fields['key_name']
-            meta_rows = gis_data_meta.objects.filter(key=keyName)
-            meta_rows.delete()
-            obj.delete()  
-            toReturn['status'] = "success"
-        else:
+    try:
+        obj = options.objects.filter(id=option_id)
+        toReturn = {}
+        if not obj:
             toReturn['status'] = "error"
-            toReturn['msg'] = "Option Cannot be Removed"
-            toReturn['errcode'] = "OPTION_IS_NOT_REMOVABLE"
+            toReturn['msg'] = "Option Id Not Found"
+            toReturn['errcode'] = "OPTION_DOES_NOT_EXIST"
+        else:
+            if(obj[0].is_removable):
+                fields = json.loads(str(obj[0].value))
+                keyName = fields['key_name']
+                meta_rows = gis_data_meta.objects.filter(key=keyName)
+                meta_rows.delete()
+                obj.delete()  
+                toReturn['status'] = "success"
+            else:
+                toReturn['status'] = "error"
+                toReturn['msg'] = "Option Cannot be Removed"
+                toReturn['errcode'] = "OPTION_IS_NOT_REMOVABLE"
+    except Exception as e:
+        toReturn["status"] = "error"
+        toReturn["msg"] = type(e) + e.message
+        toReturn["errcode"] = "500"
+
     return toReturn
 
 def remove_gis_data(data_id, user):
-    obj = gis_data.objects.filter(id=data_id)
-    toReturn = {}
-    if not obj:
-        toReturn['status'] = "error"
-        toReturn['msg'] = "Data Id Not Found"
-        toReturn['errcode'] = "DATA_DOES_NOT_EXIST"
-    else:
-        obj_meta = gis_data_meta.objects.filter(data_id=data_id)
-        obj_meta.delete()
-        obj.delete()
-        temp = gis_data.objects.filter(id=data_id)
-        if not temp:
-            toReturn['status'] = "success"
-        else:
+    try:
+        obj = gis_data.objects.filter(id=data_id)
+        toReturn = {}
+        if not obj:
             toReturn['status'] = "error"
-            toReturn['msg'] = "Internal Error"
-            toReturn['errcode'] = "INTERNAL_ERROR"
+            toReturn['msg'] = "Data Id Not Found"
+            toReturn['errcode'] = "DATA_DOES_NOT_EXIST"
+        else:
+            obj_meta = gis_data_meta.objects.filter(data_id=data_id)
+            obj_meta.delete()
+            obj.delete()
+            temp = gis_data.objects.filter(id=data_id)
+            if not temp:
+                toReturn['status'] = "success"
+            else:
+                toReturn['status'] = "error"
+                toReturn['msg'] = "Internal Error"
+                toReturn['errcode'] = "INTERNAL_ERROR"
+    except Exception as e:
+        toReturn["status"] = "error"
+        toReturn["msg"] = type(e) + e.message
+        toReturn["errcode"] = "500"
+
     return toReturn
 
 def edit_gis_data(meta_key, data_id, new_value, user):
-    obj = gis_data_meta.objects.get(key=meta_key, data=data_id)
-    toReturn = {}
-    if not obj:
-        toReturn['status'] = "error"
-        toReturn['msg'] = "Data Id Not Found"
-        toReturn['errcode'] = "DATA_DOES_NOT_EXIST"
-    else:
-        obj.value = new_value
-        obj.save()
-        toReturn['status'] = "success"
+    try:
+        obj = gis_data_meta.objects.get(key=meta_key, data=data_id)
+        toReturn = {}
+        if not obj:
+            toReturn['status'] = "error"
+            toReturn['msg'] = "Data Id Not Found"
+            toReturn['errcode'] = "DATA_DOES_NOT_EXIST"
+        else:
+            obj.value = new_value
+            obj.save()
+            toReturn['status'] = "success"
+    except Exception as e:
+        toReturn["status"] = "error"
+        toReturn["msg"] = type(e) + e.message
+        toReturn["errcode"] = "500"
+
     return toReturn
