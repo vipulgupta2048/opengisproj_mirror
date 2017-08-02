@@ -1,4 +1,5 @@
 {% extends 'portal/base.html' %}
+{% load static %}
 
 {% block title %}Add Data{% endblock %}
 
@@ -20,11 +21,15 @@
 {% endblock %}
 
 {% block js %}
+    <script src="{% static 'portal/js/chance.min.js' %}"></script>
     <script>
         $(document).ready(function(e){
             var form = $("#addNewDataForm");
             var apiURI = '/portal/ajax/';
             var submitBtn = '<button type="submit" id="addNewDataBtn" class="btn btn-default">Add</button>';
+            /*
+            var rand_count = 0;
+            var chance = new Chance(Math.random()); */
             function init(){
                 getmetafields(generateForm);
             }
@@ -50,6 +55,7 @@
                 }); 
                 addToForm(submitBtn);
                 submitBtn = $("#addNewDataBtn");
+                //setTimeout(function(){addRandomData();},2000);
             }
 
             function addToForm(html){
@@ -116,9 +122,7 @@
                         if(field.attr("type")=="number"){
                             val = parseFloat(field.val());
                             max = parseFloat(field.attr("max"));
-                            console.log("    This is a number field");
                         }
-                        console.log(val)
                         if(val>max){
                             field.tooltip({title:"Max allowed value is "+field.attr("max"), trigger: "manual", placement:"auto bottom"});
                             field.tooltip("show");
@@ -147,7 +151,6 @@
                 e.preventDefault();
                 if(!validateForm())
                     return false;
-                console.log("Form Validated!");
                 var data = form.serialize();
                 submitBtn.html("Processing");
                 $.ajax({
@@ -174,7 +177,55 @@
             function resetForm(){
                 form[0].reset();
                 submitBtn.html("Add");
+                /*
+                rand_count = rand_count+1;
+                addRandomData(true);*/
             }
+            /*
+            function addRandomData(cont=false){
+                if(!cont){
+                    var conf = confirm("Add 5000 entries?");
+                    if(!conf)
+                        return false;
+                    rand_count = 0;
+                }
+                if(rand_count>=2000)
+                    return false;
+                console.log("Adding Entry #"+rand_count);
+                if(fillRandomData()){
+                    console.log($("#addNewDataForm").serialize());
+                    $("#addNewDataForm").submit();
+                }
+            }
+            function fillRandomData(){
+                $("#addNewDataForm input").each(function(){
+                        if($(this).attr("data-key")!="undefined" || $(this).attr("data-key")!=undefined){
+                            var key = $(this).attr("data-key");
+                            if(key == "latitude"){
+                                $(this).val(chance.latitude());
+                            }
+                            else if(key == "longitude"){
+                                $(this).val(chance.longitude());
+                            }
+                            else if(key == "ph"){
+                                $(this).val(chance.floating({min:1, max:13, fixed:2}));
+                            }
+                            else if(key == "year"){
+                                $(this).val(parseInt(chance.year({min:1947, max: 2100})));
+                            }
+                            else if(key == "tds"){
+                                $(this).val(chance.floating({max:1000, min:0, fixed:3}));
+                            }
+                            else if(key == "sample_identifier"){
+                                $(this).val(chance.word());
+                            }
+                            else if(key == "temperature"){
+                                $(this).val(chance.floating({max:100, min:-50, fixed:2}));
+                            }
+                        }
+                });
+                return true;
+            }*/
             init();
         });
     </script>

@@ -70,7 +70,7 @@
     function storePos(position){
         cent_lat = position.coords.latitude;
         cent_long = position.coords.longitude;
-        var api_checker = setInterval(function(){if(api_loaded){showMap();clearInterval(api_checker);}},500);
+        map.panTo({lat:cent_lat, lng:cent_long});
     }
     function initMap(){
         api_loaded = true;
@@ -92,7 +92,6 @@
             clearCurrentMarkers();
         }
         $.each(data, function(i,v){
-            console.log(v);
             var coord = {lat: parseFloat(v.latitude) , lng: parseFloat(v.longitude) };
             var marker = new google.maps.Marker({
                 position: coord,
@@ -112,7 +111,6 @@
         for(var i=0; i<curr_markers.length; i++)
             curr_markers[i].setMap(null);
         curr_markers = [];
-        console.log("All Cleared! current length:"+curr_markers.length);
     }
     function loadGisMetaFieldsToContainers(data){
         var gisFilterParameterKey = $("#gisFilterParameterKey");
@@ -143,8 +141,6 @@
         var gisFilterParameterCondition = $("#gisFilterParameterCondition");
         var gisFilterParameterValue = $("#gisFilterParameterValue");
         var filteredArray = [];
-        console.log("Original Array:");
-        console.log(data_cache);
         $.each(data_cache, function(i,v){
             $.each(v, function(index, value){
                 if(index == gisFilterParameterKey.val()){
@@ -182,6 +178,7 @@
         setTimeout(function(){$this.removeAttr("disabled");},1500);
     });
     get_curr_cord();
+    var api_checker = setInterval(function(){if(api_loaded){showMap();clearInterval(api_checker);}},500);
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD2DVlvcLu7o2m-6OhfbipppHEzRofJh48&callback=initMap"></script>
 {% include 'portal/partials/gistable.html' %}
