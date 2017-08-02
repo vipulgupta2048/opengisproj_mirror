@@ -7,11 +7,6 @@
 
 {% block body %}
 
-  {% if form.errors %}
-
-  <p>Your username and password didn't match. Please try again.</p>
-  {% endif %}
-
   {% if next %}
    {% if user.is_authenticated %}
 
@@ -31,6 +26,12 @@
                    <h3 class="panel-title">Please Sign In</h3>
                </div>
                <div class="panel-body">
+
+                 {% if form.errors %}
+
+                 <div class="alert alert-danger" role="alert">Your username and password didn't match. Please try again</div>
+                 {% endif %}
+
                    <form method="post" action="{% url 'login' %}">
   {% csrf_token %}
 
@@ -40,6 +41,7 @@
                                    <td>{{ form.username.label_tag }}</td>
                                    <td>{{ form.username }}</td>
                                </tr>
+                               <br>
                                <tr>
                                    <td>{{ form.password.label_tag }}</td>
                                    <td>{{ form.password }}</td>
@@ -48,7 +50,7 @@
                        </p>
                        <p class="bs-component">
                            <center>
-                               <input class="btn btn-success btn-sm" type="submit" value="login" />
+                               <input class="btn btn-success btn-sm" type="submit" value="LOGIN" />
                            </center>
                        </p>
                        <input type="hidden" name="next" value="{{ next }}" />
