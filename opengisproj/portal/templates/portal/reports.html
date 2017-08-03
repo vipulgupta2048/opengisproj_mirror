@@ -59,6 +59,7 @@
     var mapsContainer = $("#gisMap")[0];
     var cent_lat = 28.644800; //Delhi 
     var cent_long = 77.216721; //Delhi
+    var api_loaded = false;
     var data_cache;
     var curr_markers = [];
     function get_curr_cord(){
@@ -69,7 +70,7 @@
     function storePos(position){
         cent_lat = position.coords.latitude;
         cent_long = position.coords.longitude;
-        map.panTo({lat:cent_lat, lng:cent_long});
+        //map.panTo({lat:cent_lat, lng:cent_long});
     }
     
     function initMap(){
@@ -78,7 +79,7 @@
     function showMap(){
         map = new google.maps.Map(mapsContainer, {
             center: {lat: cent_lat, lng: cent_long },
-            zoom: 8,
+            zoom: 5,
             mapTypeId: google.maps.MapTypeId.HYBRID, 
             panControl: true,
             zoomControl: true,
