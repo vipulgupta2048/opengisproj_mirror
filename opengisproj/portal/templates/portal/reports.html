@@ -1,6 +1,5 @@
 {% extends 'portal/base.html' %}
 {% block title %}Reports{% endblock %}
-
 {% block content %}
         <div class="row width-100-p no-margin">
             <section class="pull-left height-100 col-md-3 overflow-scroll">
@@ -60,25 +59,35 @@
     var mapsContainer = $("#gisMap")[0];
     var cent_lat = 28.644800; //Delhi 
     var cent_long = 77.216721; //Delhi
+    var api_loaded = false;
     var data_cache;
     var curr_markers = [];
     function get_curr_cord(){
         if(navigator.geolocation){
             navigator.geolocation.getCurrentPosition(storePos);
         }
-    }
+    } 
     function storePos(position){
         cent_lat = position.coords.latitude;
         cent_long = position.coords.longitude;
-        map.panTo({lat:cent_lat, lng:cent_long});
+        //map.panTo({lat:cent_lat, lng:cent_long});
     }
+    
     function initMap(){
         api_loaded = true;
     }
     function showMap(){
         map = new google.maps.Map(mapsContainer, {
             center: {lat: cent_lat, lng: cent_long },
-            zoom: 6
+            zoom: 5,
+            mapTypeId: google.maps.MapTypeId.HYBRID, 
+            panControl: true,
+            zoomControl: true,
+            mapTypeControl: false,
+            scaleControl: true,
+            streetViewControl: false,
+            overviewMapControl: false,
+            rotateControl: false
         });
         getGisData(loadGisDataToContainers);
         getmetafields(loadGisMetaFieldsToContainers);
@@ -86,7 +95,7 @@
     function loadGisDataToContainers(data){
         data_cache = data;
         loadGisDataToMap(data_cache);
-    }
+    }    
     function loadGisDataToMap(data){
         if(curr_markers.length>0){
             clearCurrentMarkers();
