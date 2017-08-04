@@ -57,9 +57,9 @@
 <script>
     var map;
     var mapsContainer = $("#gisMap")[0];
-    var cent_lat = 28.644800; //Delhi 
-    var cent_long = 77.216721; //Delhi
-    var api_loaded = false;
+    var cent_lat = 23.48; //Sihora, MP
+    var cent_long = 80.12; //Sihora, MP
+    var api_loaded = false, map_loaded = false;
     var data_cache;
     var curr_markers = [];
     function get_curr_cord(){
@@ -70,7 +70,12 @@
     function storePos(position){
         cent_lat = position.coords.latitude;
         cent_long = position.coords.longitude;
-        //map.panTo({lat:cent_lat, lng:cent_long});
+        var mapTimer = setInterval(function(){
+            if(map_loaded){
+                map.panTo({lat:cent_lat, lng: cent_long});
+                clearInterval(mapTimer);
+            }
+        },500);
     }
     
     function initMap(){
@@ -89,6 +94,7 @@
             overviewMapControl: false,
             rotateControl: false
         });
+        map_loaded = true;
         getGisData(loadGisDataToContainers);
         getmetafields(loadGisMetaFieldsToContainers);
     }
