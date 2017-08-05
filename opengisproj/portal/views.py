@@ -42,11 +42,8 @@ def processAjax(request, action):
     elif action=="addNewData":
         if request.method == "POST":
             post_data = request.POST
-            res = str(add_new_data(post_data, request.user))
-            toReturn = {}
-            toReturn["status"] = "success"
-            toReturn["id"] = res
-            return JsonResponse(toReturn, safe=False)
+            res = add_new_data(post_data, request.user, ret_json=True)
+            return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
     elif action=="getgisdata":
@@ -81,6 +78,13 @@ def processAjax(request, action):
         if(request.method == "POST"):
             post_data = request.POST
             res = edit_gis_data(meta_key=post_data['key'],data_id=post_data['dataId'],new_value=post_data['value'], user=request.user)
+            return JsonResponse(res, safe=False)
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="getdatagroups":
+        if(request.method == "GET"):
+            get_data = request.GET
+            res = get_data_groups()
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)

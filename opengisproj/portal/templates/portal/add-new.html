@@ -27,13 +27,25 @@
             var form = $("#addNewDataForm");
             var apiURI = '/portal/ajax/';
             var submitBtn = '<button type="submit" id="addNewDataBtn" class="btn btn-default">Add</button>';
+            var data_groups;
+            var groupSelectHtml = '<div class="form-group"><label for="dataGroupSelect">Group</label><select id="dataGroupSelect" name="data_group" class="form-control dataGroupContainer" required></select></div>'
             /*
             var rand_count = 0;
             var chance = new Chance(Math.random()); */
             function init(){
                 getmetafields(generateForm);
+                getDataGroups(storeGroups);
             }
-
+            function storeGroups(data){
+                data_groups = data;
+                updateGroupContainers();
+            }
+            function updateGroupContainers(){
+                $.each(data_groups, function(i,v){
+                    $(".dataGroupContainer").append('<option value="'+v.id+'">'+v.name+'</option>');
+                });
+                
+            }
             function generateForm(response){
                 $.each(response, function(i,v){
                     var html = '<div class="form-group"><label for="key_'+v.key_name+'">'+v.label+'</label><input class="form-control" type="'+v.key_type+'" data-non-meta="'+v.non_meta+'"data-key="'+v.key_name+'" id="key_'+v.key_name+'" name="'+v.key_name+'"';
@@ -50,6 +62,7 @@
                     html+='></div>';
                     addToForm(html);
                 });
+                addToForm(groupSelectHtml);
                 form.find("input").change(function(){
                     validateField($(this));
                 }); 
@@ -63,90 +76,14 @@
             }
             function validateForm(){
                 var toReturn = false;
-                form.find("input").each(function(e){
+                form.find("input,select").each(function(e){
                     toReturn = validateField($(this));
                     if(!toReturn)
                         return false;
                 });
                 return toReturn;
             }
-            function validateField(field){
-                var val = field.val();
-                var len = val.length;
-                if(field.attr("required")!="undefined"){
-                    if(len==0){
-                        field.tooltip({title:"This Field is required!", trigger:"manual", placement:"auto bottom"});
-                        field.tooltip('show');
-                        field.parent("div.form-group").removeClass("has-success").addClass("has-error");
-                        return false;
-                    }
-                }
-                if(field.attr("min")!="undefined"){
-                    if(field.attr("type")=="text"){
-                        if(len<parseInt(field.attr("min"))){
-                            field.tooltip({title:"Enter Atleast "+field.attr("min")+" characters", trigger:"manual", placement:"auto bottom"});
-                            field.tooltip("show");
-                            field.parent("div.form-group").removeClass("has-success").addClass("has-error");
-                            toReturn = false;
-                            return false
-                        }
-                    }else{
-                        val = field.val();
-                        min = field.attr("min");
-                        if(field.attr("type")=="number"){
-                            val = parseFloat(field.val());
-                            min = parseFloat(field.attr("min"));
-                        }
-                        if(val<min){
-                            field.tooltip({title:"Min allowed value is "+field.attr("min"), trigger: "manual", placement:"auto bottom"});
-                            field.tooltip("show");
-                            field.parent("div.form-group").removeClass("has-success").addClass("has-error");
-                            toReturn = false;
-                            return false;
-                        }
-                    }
-                    
-                }
-                if(field.attr("max")!="undefined"){
-                    if(field.attr("type")=="text"){
-                        if(len>parseInt(field.attr("max"))){
-                            field.tooltip({title:"Max "+field.attr("max")+" characters allowed!", trigger: "manual", placement:"auto bottom"});
-                            field.tooltip("show");
-                            field.parent("div.form-group").removeClass("has-success").addClass("has-error");
-                            toReturn = false;
-                            return false;
-                        }
-                    }else{
-                        val = field.val();
-                        max = field.attr("max");
-                        if(field.attr("type")=="number"){
-                            val = parseFloat(field.val());
-                            max = parseFloat(field.attr("max"));
-                        }
-                        if(val>max){
-                            field.tooltip({title:"Max allowed value is "+field.attr("max"), trigger: "manual", placement:"auto bottom"});
-                            field.tooltip("show");
-                            field.parent("div.form-group").removeClass("has-success").addClass("has-error");
-                            toReturn = false;
-                            return false;
-                        }
-                    }
-                }
-                if(field.attr("max-len")!="undefined"){
-                    val = field.val();
-                    max_len = parseInt(field.attr("max-len"));
-                    if(val.length>max_len){
-                        field.tooltip({title:"Max "+field.attr("max-len")+' characters allowed', trigger: "manual", placement:"auto bottom"});
-                        field.tooltip("show");
-                        field.parent("div.form-group").removeClass("has-success").addClass("has-error");
-                        toReturn = false;
-                        return false;
-                    }
-                }
-                field.tooltip("hide");
-                field.parent("div.form-group").removeClass("has-error").addClass("has-success");
-                return true;
-            }
+            
             form.submit(function(e){
                 e.preventDefault();
                 if(!validateForm())

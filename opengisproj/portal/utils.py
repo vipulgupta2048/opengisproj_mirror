@@ -71,30 +71,47 @@ def is_meta_key(key):
         return toReturn
 
 def add_new_data(post_data, request_user, ret_json=False):
+    toReturn = {}
     try:
         is_first = True
         gis_id = -1
+        group_id = data_groups.objects.filter(id=post_data["data_group"])
+        if not group_id:
+            return False
+        group_id = group_id[0]
         for x in post_data:
             key = x
             val = post_data[key]
             if(is_meta_key(key)):
                 if(is_first):
-                    g = gis_data.objects.create(created_by=request_user)
+                    g = gis_data.objects.create(created_by=request_user, data_group = group_id)
                     g.save()
                     gis_id = g
                     is_first=False
                 m = gis_data_meta.objects.create(key=key, value=val, data=gis_id)
                 m.save()
         if(ret_json):
-            return {"id":str(gis_id.id)}
+            toReturn["status"] = "success"
+            toReturn["id"] = gis_id.id
         else:
             return gis_id.id
     except Exception as e:
-        toReturn = {}
         toReturn["status"] = "error"
-        toReturn["msg"] = type(e) + e.message
+        toReturn["msg"] = e
         toReturn["errcode"] = "500"
-        return toReturn
+    return toReturn
+def get_data_groups():
+    try:
+        groups = data_groups.objects.all()
+        arr = []
+        for x in groups:
+            obj = {}
+            obj['id'] = x.id
+            obj['name'] = x.name
+            arr.append(obj)        
+        return arr
+    except Exception as e:
+        return e
 
 def add_param(data, user):
     toReturn = {}
