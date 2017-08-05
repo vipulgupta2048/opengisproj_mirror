@@ -6,6 +6,10 @@
                 <div class="row">
                     <h4 class="text-center">Filter by</h4>
                     <div class="col-xs-12 form-group">
+                        <label for="browseDataGroupSelect">Select Data Group</label>
+                        <select class="dataGroupContainer form-control" id="reportsDataGroupSelect"></select>
+                    </div>
+                    <div class="col-xs-12 form-group">
                         <select id="gisFilterParameterKey" class="form-control">
                         </select>
                     </div>
@@ -62,6 +66,13 @@
     var api_loaded = false, map_loaded = false;
     var data_cache;
     var curr_markers = [];
+    function init(){
+        get_curr_cord();
+        getmetafields(loadGisMetaFieldsToContainers);
+        getGisData(loadGisDataToContainers);
+        var api_checker = setInterval(function(){if(api_loaded){showMap();clearInterval(api_checker);}},500);
+
+    }
     function get_curr_cord(){
         if(navigator.geolocation){
             navigator.geolocation.getCurrentPosition(storePos);
@@ -95,12 +106,13 @@
             rotateControl: false
         });
         map_loaded = true;
-        getGisData(loadGisDataToContainers);
-        getmetafields(loadGisMetaFieldsToContainers);
     }
     function loadGisDataToContainers(data){
         data_cache = data;
-        loadGisDataToMap(data_cache);
+        if(map_loaded)
+            loadGisDataToMap(data_cache);
+        else
+            var loadMapDataTimer = setInterval(function(){if(map_loaded){loadGisDataToMap(data_cache); clearInterval(loadMapDataTimer);}},500);
     }    
     function loadGisDataToMap(data){
         if(curr_markers.length>0){
@@ -152,48 +164,50 @@
         e.preventDefault();
         $this = $(this);    
         $(this).attr("disabled","disabled");
+        var data_group = $("#reportsDataGroupSelect").val();
         var gisFilterParameterKey = $("#gisFilterParameterKey");
         var gisFilterParameterCondition = $("#gisFilterParameterCondition");
         var gisFilterParameterValue = $("#gisFilterParameterValue");
         var filteredArray = [];
         $.each(data_cache, function(i,v){
-            $.each(v, function(index, value){
-                if(index == gisFilterParameterKey.val()){
-                    var temp = v;
-                    if(gisFilterParameterCondition.val() == "<"){
-                       if(value < gisFilterParameterValue.val()){
-                            filteredArray.push(temp);
+            if(v.data_group == data_group || data_group == "*"){
+                $.each(v, function(index, value){
+                    if(index == gisFilterParameterKey.val()){
+                        var temp = v;
+                        if(gisFilterParameterCondition.val() == "<"){
+                        if(value < gisFilterParameterValue.val()){
+                                filteredArray.push(temp);
+                            }
+                        }
+                        if(gisFilterParameterCondition.val() == ">"){
+                        if(value > gisFilterParameterValue.val()){
+                                filteredArray.push(temp);
+                            }
+                        }
+                        if(gisFilterParameterCondition.val() == "="){
+                        if(value == gisFilterParameterValue.val()){
+                                filteredArray.push(temp);
+                            }
+                        }
+                        if(gisFilterParameterCondition.val() == ">="){
+                        if(value >= gisFilterParameterValue.val()){
+                                filteredArray.push(temp);
+                            }
+                        }
+                        if(gisFilterParameterCondition.val() == "<="){
+                        if(value <= gisFilterParameterValue.val()){
+                                filteredArray.push(temp);
+                            }
                         }
                     }
-                    if(gisFilterParameterCondition.val() == ">"){
-                       if(value > gisFilterParameterValue.val()){
-                            filteredArray.push(temp);
-                        }
-                    }
-                    if(gisFilterParameterCondition.val() == "="){
-                       if(value == gisFilterParameterValue.val()){
-                            filteredArray.push(temp);
-                        }
-                    }
-                    if(gisFilterParameterCondition.val() == ">="){
-                       if(value >= gisFilterParameterValue.val()){
-                            filteredArray.push(temp);
-                        }
-                    }
-                    if(gisFilterParameterCondition.val() == "<="){
-                       if(value <= gisFilterParameterValue.val()){
-                            filteredArray.push(temp);
-                        }
-                    }
-                }
-            });
+                });
+            }
         });
         loadGisDataToMap(filteredArray);
         $("#gisDataTable").bootstrapTable("load",filteredArray);
         setTimeout(function(){$this.removeAttr("disabled");},1500);
     });
-    get_curr_cord();
-    var api_checker = setInterval(function(){if(api_loaded){showMap();clearInterval(api_checker);}},500);
+    init();
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD2DVlvcLu7o2m-6OhfbipppHEzRofJh48&callback=initMap"></script>
 {% include 'portal/partials/gistable.html' %}

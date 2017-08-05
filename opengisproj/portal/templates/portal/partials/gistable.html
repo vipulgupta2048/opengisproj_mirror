@@ -40,6 +40,7 @@
                             data_filtered = filterDataByGroup(g_id);
                         table.bootstrapTable('load', data_filtered);
                     });
+                    $("#reportsDataGroupSelect").off("change");
                 }
             },3000);           
         }
