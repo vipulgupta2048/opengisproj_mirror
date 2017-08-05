@@ -3,10 +3,15 @@
     <script>
         var gisTable = $("#gisDataTable");
         var tableError = $("#gisDataTableError");
+        var dataGroupSelect = $(".dataGroupContainer");
         var metaFields = [], gisData = [], metaFieldsRaw;
+        var meta_loaded = false, data_loaded = false;
         function loadGisDataTable(table){
             getmetafields(populateMetaFields);
             getGisData(processData);
+            if(dataGroupSelect!=undefined){
+                getDataGroups(loadDataGroupSelector);
+            }
             var tableLoadedTimer = setInterval(function(){
                 if(meta_loaded == true && data_loaded == true){
                     table.bootstrapTable({
@@ -26,14 +31,38 @@
                     gisTable = table;
                     bindGisDataRemove();
                     $(".loading-text").hide();
+                    dataGroupSelect.on("change", function(){
+                        var g_id = $(this).val();
+                        var data_filtered;
+                        if(g_id == "*")
+                            data_filtered = gisData;
+                        else
+                            data_filtered = filterDataByGroup(g_id);
+                        table.bootstrapTable('load', data_filtered);
+                    });
                 }
-            },3000);
-            
+            },3000);           
+        }
+        function filterDataByGroup(group_id){
+            var filtered_data = [];
+            $.each(gisData, function(i,v){
+                if(v.data_group == group_id){
+                    filtered_data.push(v);
+                }
+            });
+            return filtered_data;
+        }
+        function loadDataGroupSelector(data){
+            dataGroupSelect.append('<option value="*">All</option>');
+            $.each(data, function(i,v){
+                dataGroupSelect.append('<option value="'+v.id+'">'+v.name+'</option>');
+            });
         }
         function populateMetaFields(data){
             metaFieldsRaw = data;
             metaFields.push({field: 'state', checkbox: true, align: 'center'});
             metaFields.push({field: "id", title: "Id", editable: false});
+            metaFields.push({field: "data_group", title: "Data Group", editable: false, visible:false});
             $.each(data, function(i,v){
                 var temp = {field: v.key_name, title: v.label, sortable:true};
                 metaFields.push(temp);

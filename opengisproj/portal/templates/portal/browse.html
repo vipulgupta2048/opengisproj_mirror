@@ -10,6 +10,11 @@
 {% block content %}
     <div class="row">
         <h1 class="text-center">Browse</h1>
+        
+        <div class="form-group container">
+            <label for="browseDataGroupSelect">Select Data Group</label>
+            <select class="dataGroupContainer form-control" id="browseDataGroupSelect"></select>
+        </div>
         <h3 class="text-center loading-text">Loading Table</h3>
         <div class="container">
             <div class="alert text-center" id="gisDataTableError"></div>

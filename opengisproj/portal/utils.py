@@ -42,6 +42,7 @@ def get_meta():
             obj = {}    #Create new empty dictionary
             gis_id = x.id
             obj["id"] = str(gis_id)  #Add Id to dictionary
+            obj["data_group"] = str(x.data_group.id)
             gis_meta = gis_data_meta.objects.filter(data=gis_id)    #Fetch all rows from gis_data_meta that contain data for gis_id 
             for y in gis_meta:
                 obj[y.key] = y.value    #Add Every Key to dictionary with it's value
