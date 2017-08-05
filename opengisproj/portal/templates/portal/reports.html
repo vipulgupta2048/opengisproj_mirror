@@ -6,15 +6,17 @@
                 <div class="row">
                     <h4 class="text-center">Filter by</h4>
                     <div class="col-xs-12 form-group">
-                        <label for="browseDataGroupSelect">Select Data Group</label>
-                        <select class="dataGroupContainer form-control" id="reportsDataGroupSelect"></select>
+                        <label for="browseDataGroupSelect">Select Data Group(Required)</label>
+                        <select class="dataGroupContainer form-control" id="reportsDataGroupSelect" required></select>
                     </div>
                     <div class="col-xs-12 form-group">
-                        <select id="gisFilterParameterKey" class="form-control">
+                        <label for="gisFilterParamterKey">Match Key</label>
+                        <select id="gisFilterParameterKey" class="form-control" required>
                         </select>
                     </div>
                     <div class="col-xs-12 form-group">
-                        <select id="gisFilterParameterCondition" class="form-control">
+                        <label for="gisFilterParameterCondition">Condition</label>
+                        <select id="gisFilterParameterCondition" class="form-control" required>
                             <option value=">">Greater Than</option>
                             <option value="<">Less Than</option>
                             <option value="=">Equals</option>
@@ -23,7 +25,8 @@
                         </select>
                     </div>
                     <div class="col-xs-12 form-group">
-                        <input id="gisFilterParameterValue" class="form-control" placeholder="Value"/>
+                        <label for="gisFilterParameterValue">Value</label>
+                        <input id="gisFilterParameterValue" class="form-control" placeholder="Value" required/>
                     </div>
                     <div class="col-xs-12 form-group">
                         <button type="button" class="btn btn-primary form-control" id="gisFilterSubmitBtn">Filter</button>
@@ -31,6 +34,7 @@
                 </div>
                 <div class="row">
                     <div class="text-center alert"  id="gisDataTableError"></div>
+                    <h3 class="text-center loading-text">Loading Table</h3>
                     <table id="gisDataTable"></table>
                 </div>
             </section>
@@ -164,13 +168,19 @@
         e.preventDefault();
         $this = $(this);    
         $(this).attr("disabled","disabled");
-        var data_group = $("#reportsDataGroupSelect").val();
+        var data_group = $("#reportsDataGroupSelect");
         var gisFilterParameterKey = $("#gisFilterParameterKey");
         var gisFilterParameterCondition = $("#gisFilterParameterCondition");
         var gisFilterParameterValue = $("#gisFilterParameterValue");
         var filteredArray = [];
+        if(data_group.val() == null){
+            data_group.tooltip({title:"This Field is required", trigger:"manual", placement:"auto bottom"});
+            data_group.tooltip("show");                    
+            $(this).removeAttr("disabled");
+            return false;
+        }
         $.each(data_cache, function(i,v){
-            if(v.data_group == data_group || data_group == "*"){
+            if(v.data_group == data_group.val() || data_group.val() == "*"){
                 $.each(v, function(index, value){
                     if(index == gisFilterParameterKey.val()){
                         var temp = v;

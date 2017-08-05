@@ -28,6 +28,7 @@
                         singleSelect: true,
                         onDblClickCell: editcelldata,
                     });
+                    table.bootstrapTable('hideLoading');
                     gisTable = table;
                     bindGisDataRemove();
                     $(".loading-text").hide();
