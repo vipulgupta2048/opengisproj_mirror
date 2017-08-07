@@ -43,7 +43,7 @@ function storeGisData(data){
 }
 
 function getGisGroups(callbackFunc){
-
+    
 }
 
 function storeGisGroups(data){
@@ -172,6 +172,79 @@ function validateField(field, showErrors=true){
     return true;    //Return true
 }
 
+function filterGisData(key, val, condition){
+    /** Filter GisData and Return Array containing filtered data
+     * 
+     *  Data type and format remains same
+     *  checks for key_type attribute for key
+     */
+    var filteredGisData = [];
+    $.each(gisData, function(i,v){
+        /** Iterate through gisData array 
+         *  i: Contains Array Index
+         *  v: Contains gisData Object
+        **/
+        $.each(v, function(index, value){
+            /** Match keys to find Filter Key 
+             *  index: Contains Key Name from gisDataArray Object
+             *  value: Contains Value of the key 
+            **/
+            if(index == key){
+                var key_type = getKeyType(key);     //Get Key Type
+                if(key_type == "number"){
+                    val = parseFloat(val);  //Parse as float if key_type is number
+                    value = parseFloat(value);  //Parse as float if key_type is number
+                }
+                /** If Filter Key and gisData Key is natched **/
+                if(condition == "<"){
+                    /** if Filter condition is 'Less Than' **/
+                    if(value < val){
+                        filteredGisData.push(v);
+                    }
+                }
+                if(condition == ">"){
+                    /** if Filter condition is 'Greater Than' **/
+                    if(value > val){
+                        filteredGisData.push(v);
+                    }
+                }
+                if(condition == "="){
+                    /** if Filter Condition is 'Equal to' **/
+                    if(value == val){
+                        filteredGisData.push(v);
+                    }
+                }
+                if(condition == ">="){
+                    /** if Filter Condition is 'Greater than or Equal to' **/
+                    if(value >= val){
+                        filteredGisData.push(v);
+                    }
+                }
+                if(condition == "<="){
+                    /** if Filter Condition is 'Less than or equal to' **/
+                    if(value <= val){
+                        filteredGisData.push(v);
+                    }
+                }
+                return false;   //End $.each loop inner
+            }
+        }); 
+    });
+    return filteredGisData;
+} 
+
+function getKeyType(key_name){
+    /** Iterate through Meta Fields Array and return key_type on matching passed key */
+    $.each(gisMetaFields, function(i,v){
+        if(v.key_name == key_name){
+            key_type = v.key_type;
+            return false;   //Break $.each loop
+        }
+    });
+    return key_type;
+}
+
 function showNotification(msg, type){
+    /** Shows Global Notification using notify.js */
     $.notify(msg, {position:"bottom left", className:type});
 }
