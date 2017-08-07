@@ -1,6 +1,6 @@
 var apiURI = '/portal/ajax/';
 
-function getmetafields(callbackFunc){
+function getMetaFields(callbackFunc){
     $.ajax({
         url: apiURI+'getmetafields',
         type: "GET",
@@ -14,6 +14,11 @@ function getmetafields(callbackFunc){
             console.log(response);
         }
     });
+}
+
+function storeMetaFields(data){
+    gisMetaFields = data;
+    gis_meta_fields_stored = true;
 }
 
 function getGisData(callbackFunc){
@@ -30,6 +35,47 @@ function getGisData(callbackFunc){
             console.log(response);
         }
     });
+}
+
+function storeGisData(data){
+    gisData = data;
+    gis_data_stored = true;
+}
+
+function getGisGroups(callbackFunc){
+
+}
+
+function storeGisGroups(data){
+    gisGroups = data;
+    gis_groups_stored = true;
+}
+
+function addMetaFieldAttributes(key_name){
+    /** Accept Key Name and return a string containing HTML <input> attributes */
+    var field_attr = '';
+    $.each(gisMetaFields, function(i,v){
+        if(v.key_name == key_name){
+            field_attr+=' type="'+v.key_type+'"';
+            // Check for min attribute
+            if(v.min!="Null" && v.min!="undefined" && v.min!=undefined)
+                field_attr+=' min="'+v.min+'"';
+            // Check for Max Attribute
+            if(v.max!="Null" && v.max!="undefined" && v.max!=undefined)
+                field_attr+=' max="'+v.max+'"';
+            // Check for Step Attribute
+            if(v.step!="Null" && v.step!="undefined" && v.step!=undefined)
+                field_attr+=' step="'+v.step+'"';
+            // Check for Max-Len Attribute
+            if(v.max_len!="Null" && v.max_len!="undefined" && v.max_len!=undefined)
+                field_attr+=' max-len="'+v.max_len+'"';
+            // Check for Required Attribute
+            if(v.required!="Null" && v.required!=undefined && v.required!="undefined" && v.required=="True") 
+                field_attr+=' required';
+            return false;   // End the $.each Loop
+        }
+    });
+    return field_attr;  //Return the Final String
 }
 
 function validateField(field, showErrors=true){
@@ -124,4 +170,8 @@ function validateField(field, showErrors=true){
     field.tooltip("hide");    //Hide tooltip if no errors were found
     field.parent("div.form-group").removeClass("has-error").addClass("has-success"); //Add Bootstrap has-success clas to the field
     return true;    //Return true
+}
+
+function showNotification(msg, type){
+    $.notify(msg, {position:"bottom left", className:type});
 }

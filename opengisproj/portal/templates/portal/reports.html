@@ -26,8 +26,7 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="text-center alert"  id="gisDataTableError"></div>
-                    <table id="gisDataTable"></table>
+                    <table id="gisDataTable" data-is-editable="false"></table>
                 </div>
             </section>
             <section class="pull-left height-100 col-md-9 no-padding">
@@ -101,7 +100,7 @@
     function loadGisDataToContainers(data){
         data_cache = data;
         loadGisDataToMap(data_cache);
-    }    
+    }       
     function loadGisDataToMap(data){
         if(curr_markers.length>0){
             clearCurrentMarkers();
