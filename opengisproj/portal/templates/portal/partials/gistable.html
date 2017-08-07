@@ -1,132 +1,143 @@
 {% load static %}
 <script src="{% static 'portal/js/bootstrap-table.min.js' %}"></script>
     <script>
-        var gisTable = $("#gisDataTable");
-        var tableError = $("#gisDataTableError");
-        var dataGroupSelect = $(".dataGroupContainer");
-        var metaFields = [], gisData = [], metaFieldsRaw;
-        var meta_loaded = false, data_loaded = false;
+        var gisTable = $("#gisDataTable");  //Select GIS Data Table
+        var isTableEditable = gisTable.attr("data-is-editable");    //Check if it is editable
+        var dataGroupSelect = $(".gisDataGroupSelect");    //Select Groups Container
+        var columns = [], meta_loaded, data_loaded;             
+        
         function loadGisDataTable(table){
-            getmetafields(populateMetaFields);
-            getGisData(processData);
+            generateTableColumns();     //Create Table Columns in BootstrapTable Format
+            
             if(dataGroupSelect!=undefined){
-                getDataGroups(loadDataGroupSelector);
-            }
-            var tableLoadedTimer = setInterval(function(){
-                if(meta_loaded == true && data_loaded == true){
-                    table.bootstrapTable({
-                        columns: metaFields,
-                        data: gisData,
-                        idField: "id",
-                        uniqueId: "id",
-                        clickToSelect: true,
-                        pagination: true,
-                        pageSize: 10,
-                        search: true,
-                        showColumns: true,
-                        showToggle: true,
-                        singleSelect: true,
-                        onDblClickCell: editcelldata,
-                    });
-                    table.bootstrapTable('hideLoading');
-                    gisTable = table;
-                    bindGisDataRemove();
-                    $(".loading-text").hide();
+                // Load Group Selector if exists
+                var groupSelectTimer = setInterval(function(){
+                    if(gis_groups_stored == true){
+                        clearInterval(groupSelectTimer);
+                        loadDataGroupSelector(dataGroupSelect);
+                    }
                     dataGroupSelect.on("change", function(){
                         var g_id = $(this).val();
                         var data_filtered;
                         if(g_id == "*")
                             data_filtered = gisData;
                         else
-                            data_filtered = filterDataByGroup(g_id);
+                            data_filtered = filterGisData("data_group",g_id,"=");
                         table.bootstrapTable('load', data_filtered);
+                        $(document).trigger('gisDataGroupChange');
                     });
-                    $("#reportsDataGroupSelect").off("change");
-                }
-            },3000);           
-        }
-        function filterDataByGroup(group_id){
-            var filtered_data = [];
-            $.each(gisData, function(i,v){
-                if(v.data_group == group_id){
-                    filtered_data.push(v);
-                }
-            });
-            return filtered_data;
-        }
-        function loadDataGroupSelector(data){
-            dataGroupSelect.append('<option value="*">All</option>');
-            $.each(data, function(i,v){
-                dataGroupSelect.append('<option value="'+v.id+'">'+v.name+'</option>');
-            });
-        }
-        function populateMetaFields(data){
-            metaFieldsRaw = data;
-            metaFields.push({field: 'state', checkbox: true, align: 'center'});
-            metaFields.push({field: "id", title: "Id", editable: false});
-            metaFields.push({field: "data_group", title: "Data Group", editable: false, visible:false});
-            $.each(data, function(i,v){
-                var temp = {field: v.key_name, title: v.label, sortable:true};
-                metaFields.push(temp);
-            });
-            metaFields.push({field: 'action', title: 'Actions', align: 'center', formatter: actionFormatter});
-            function actionFormatter(value, row, index){
-                html = '<a href="#" class="gisDataRemoveBtn"><i class="glyphicon glyphicon-remove"></i></a>';
-                return html;
+                }, 200);
             }
-            meta_loaded = true;
+            var tableLoadedTimer = setInterval(function(){
+                /** Call Function Repeatedly to check if data and coloumns are loaded and
+                 * perform actions thereby
+                **/
+                if(meta_loaded == true && gis_data_stored == true){
+                    clearInterval(tableLoadedTimer);    //Stop this Function
+                    var tableOptions = {columns: columns, data: gisData, idField: "id", uniqueId: "id", 
+                        clickToSelect: true, pagination: true, pageSize: 10, search: true, showColumns: true, 
+                        showToggle: true, singleSelect: true, onDblClickCell: editCellData};
+                    table.bootstrapTable(tableOptions);    //Initialize Table
+                    table.bootstrapTable('hideLoading');
+                    gisTable = table;   //Update GisTable Variable
+                    bindGisDataRemove();    //Enable the Remove Row Buttons
+                    $(".loading-text").hide();  //Hide Loading Table
+                }
+            },3000);
         }
-        function editcelldata(field, value, row, element){
-            if(element.hasClass("edit-mode"))
+
+        function generateTableColumns(){
+            /**
+             * Generate Boostrap Table Columns
+             * 
+            **/ 
+            /** Push Default Columns **/
+            var tableColumnTimer = setInterval(function(){
+                if(gis_meta_fields_stored == false)
+                    return false;
+                clearInterval(tableColumnTimer);
+                columns.push({field: 'state', checkbox: true, align: 'center'});
+                columns.push({field: "id", title: "Id", editable: false});
+
+                /** Add Columns from Database Array **/ 
+                $.each(gisMetaFields, function(i,v){
+                    columns.push({field: v.key_name, title: v.label, sortable:true});
+                });
+                columns.push({field: 'action', title: 'Actions', align: 'center', formatter: actionFormatter});
+                /** Add Actions here **/
+                function actionFormatter(value, row, index){
+                    html = '<a href="#" class="gisDataRemoveBtn"><i class="glyphicon glyphicon-remove"></i></a>';
+                    return html;
+                }
+                meta_loaded = true;
+            }, 200);
+        }
+
+        function editCellData(field, value, row, element){
+            /** Converts the Data Table's <td> to <input> to allow data to be modified and store in database 
+             * Function accepts parameters according to onDblClickCell Event of Bootstrap Table
+             * callback(field, value, row, $element)
+             * field: the field name corresponding to the clicked cell, 
+             * value: the data value corresponding to the clicked cell, 
+             * row: the record corresponding to the clicked row, 
+             * $element: the td element.
+            **/
+            /** Check if Table is Editable **/
+            if(isTableEditable == "false" || isTableEditable == false)
                 return false;
+            /**  Check if the element is already being edited **/
+            if(element.hasClass("edit-mode"))
+                return false;   // Return false if is being edited
+            
             var key = field;
+            /** Ignore Default fields **/
             if(key == "id" || key=="state" || key=="action")
                 return false;
-            var prevValue = value;
+            
+            var prevValue = value;  //store Current Value
             var data_id = row["id"];
             var field_attr = "";
-            $.each(metaFieldsRaw, function(i,v){
-                if(v.key_name == key){
-                    field_attr+=' type="'+v.key_type+'"';
-                    if(v.min!="Null" && v.min!="undefined")
-                        field_attr+=' min="'+v.min+'"';
-                    if(v.max!="Null" && v.max!="undefined")
-                        field_attr+=' max="'+v.max+'"';
-                    if(v.step!="Null" && v.step!="undefined")
-                        field_attr+=' step="'+v.step+'"';
-                    if(v.max_len!="Null" && v.max_len!="undefined")
-                        field_attr+=' max-len="'+v.max_len+'"';
-                    if(v.required!="Null" && v.required!=undefined && v.required!="undefined" && v.required=="True") 
-                        field_attr+=' required';
-                    return false;
-                }
-            });
-            element.addClass("edit-mode");
-            element.html('<div class="form-group"><input '+field_attr+' value="'+value+'" class="form-control editGisDataInput"><br><i class="glyphicon glyphicon-remove pull-right icon-btn closeEditGisDataBtn"></i><i class="glyphicon glyphicon-ok submitEditGisDataBtn pull-right icon-btn"></i></div>');
-            gisTable.bootstrapTable('resetView');
-            var gisInput = element.find(".editGisDataInput");
+
+            field_attr += addMetaFieldAttributes(key);
+            element.addClass("edit-mode");  //Enter Edit Mode
+            showNotification("Edit Mode on "+data_id+":"+key, "info");  //Show Notification
+            /** Create a Input Ele  ment and Insert it into the <td> element **/
+            element.html('<div class="form-group"><input '+field_attr+' value="'+value+'" class="form-control editGisDataInput"'+
+                '><br><i class="glyphicon glyphicon-remove pull-right icon-btn closeEditGisDataBtn"></i><i class="glyphicon'+
+                ' glyphicon-ok submitEditGisDataBtn pull-right icon-btn"></i></div>');
+            
+            var gisInput = element.find(".editGisDataInput");   // Select the newly created Input Element
+            /** Bind keydown handler to new element **/
             gisInput.on("keydown", function(e){
                 $this = $(this);
+                /** Submit the new data on "Enter" **/
                 if(e.keyCode==13){
                     e.preventDefault();
                     processEditGisDataInput($this, key, data_id);
                 }
             });
+            /** Bind Click Handler to newly created Submit Button **/
             element.find(".submitEditGisDataBtn").on("click", function(){
-                processEditGisDataInput(gisInput, key, data_id);
+                processEditGisDataInput(gisInput, key, data_id);    // Process the Input
             });
+            /** Bind Click Handler to New Created Close Button **/
             element.find(".closeEditGisDataBtn").on("click",function(){
-                element.html(value);
-                element.removeClass("edit-mode");
+                element.html(value);    //Restore Previous Value
+                element.removeClass("edit-mode");   // Exit Edit Mode
             });
         }
         function processEditGisDataInput(field, key, data_id){
+            /** Validate and Submit Data entered in Edit Data Mode **/
             if(validateField(field)){
-                field.off("keydown");
-                field.attr("disabled","disabled");
+                var parent = field.parents("td.edit-mode"); //Select parent <td>
+                var parentRow = parent.parents("tr");   //Select parent <tr>
+                field.off("keydown");   //Disable Keydown handler
+                field.attr("disabled","disabled");  //Disable Input
                 var submitEditGisDataBtn = field.parents("td").find(".submitEditGisDataBtn");
-                submitEditGisDataBtn.removeClass("glyphicon-ok").addClass("glyphicon-refresh").off("click");
-                var value = field.val();
+                //Change Icon and Remove Click Handler from the Edit Cell Submit Button
+                submitEditGisDataBtn.removeClass("glyphicon-ok").addClass("glyphicon-refresh").off("click");    
+                var value = field.val();    //Store Input Value
+                /** Create data to be sent to server **/
                 var data = "key="+key+"&dataId="+data_id+"&value="+value+"&csrfmiddlewaretoken={{ csrf_token }}";
                 $.ajax({
                     url: apiURI+"editdata",
@@ -140,23 +151,17 @@
                 });
                 function processResponse(r){
                     if(r.status == "success"){
-                        var cell = field.parents("td");
-                        cell.css("transition","1s");
-                        cell.addClass("bg-success");
-                        setTimeout(function(){
-                            cell.removeClass("bg-success");
-                        },2000);
-                        cell.removeClass("edit-mode");
-                        cell.html(value);
-                        var ind = gisTable.find("tr").index(cell.parents("tr"))-1;
-                        gisTable.bootstrapTable('updateCell',{index:ind, field:key, value:value});
-                        gisTable.bootstrapTable('resetView');  
-                        tableError.fadeOut();
-                        tableError.removeClass("alert-danger").addClass("alert-success").html("Successfully Updated!").fadeIn();
+                        parent.removeClass("edit-mode");  //Exit Edit Mode
+                        parent.html(value);   // Update Value
+                        var parentRowIndex = gisTable.find("tr").index(parentRow)-1;
+                        /** Update Table Cell **/
+                        gisTable.bootstrapTable('updateCell',{index:parentRowIndex, field:key, value:value, reinit:false});
+                        showNotification('Successfully Updated '+data_id+":"+key, 'success');    //Notify The user
                     }else{
                         if(r.status == "error"){
                             field.tooltip({title:r.msg, trigger: "manual", placement:"auto bottom"});
                             field.tooltip("show");
+                            /** Rebind All **/
                             submitEditGisDataBtn.on("click", function(){processEditGisDataInput(field,key,data_id);})
                             field.removeAttr("disabled");
                             field.on("keydown", function(e){
@@ -166,30 +171,30 @@
                                 }
                             });
                             submitEditGisDataBtn.removeClass("glyphicon-refresh").addClass("glyphicon-ok");
-                            tableError.fadeOut();
-                            tableError.removeClass("alert-success").addClass("alert-danger").html("Successfully Updated!").fadeIn();    
+                            showNotification("Error Occured "+data_id+":"+key, "error");
                         }
                     }
                 }
             }
         }
-        function processData(data){
-            $.each(data, function(i,v){
-                gisData.push(v);
-            });
-            data_loaded = true;
-        }
+
         function bindGisDataRemove(){
+            /** Binds Remove Button in rows to delete the data **/
+            if(isTableEditable == 'false' || isTableEditable == false)
+                return false;
+
             $(".gisDataRemoveBtn").one("click", function(e){
                 e.preventDefault();
                 removeGisData($(this).parents("tr"));
             });
         }
         function removeGisData(row){
-            $(".gisDataRemoveBtn").off("click");
-            var id = row.attr("data-uniqueid");
-            var r = confirm("This will delete all data associated with id #"+id);
+            /** Removes Row from Database **/
+            $(".gisDataRemoveBtn").off("click"); //Disable Remove Button
+            var id = row.attr("data-uniqueid"); //Get ID of the row
+            var r = confirm("This will delete all data associated with id #"+id);   //Confirm with user
             if(r == true){
+                // on User Confirmation
                 $.ajax({
                     url: apiURI + 'removedata',
                     data: "id="+id+"&csrfmiddlewaretoken="+'{{ csrf_token }}',
@@ -208,13 +213,12 @@
             }
             function processResponse(r){
                 if(r.status == "success"){
+                    //id removed successfully from database
                     $("#gisDataTable").bootstrapTable('removeByUniqueId',id);
+                    showNotification("Successfully Removed!", "success");
                 }else{
                     if(r.status == "error"){
-                        tableError.fadeOut();
-                        tableError.removeClass("alert-success").addClass("alert-danger");
-                        tableError.html("Unable to Delete due to "+r.msg);
-                        tableError.fadeIn();
+                        showNotification("Unable to remove!<br>"+r.msg, "error");
                     }   
                 }
                 bindGisDataRemove();

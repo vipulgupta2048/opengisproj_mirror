@@ -1,6 +1,6 @@
 var apiURI = '/portal/ajax/';
 
-function getmetafields(callbackFunc){
+function getMetaFields(callbackFunc){
     $.ajax({
         url: apiURI+'getmetafields',
         type: "GET",
@@ -14,6 +14,11 @@ function getmetafields(callbackFunc){
             console.log(response);
         }
     });
+}
+
+function storeMetaFields(data){
+    gisMetaFields = data;
+    gis_meta_fields_stored = true;
 }
 
 function getGisData(callbackFunc){
@@ -31,7 +36,13 @@ function getGisData(callbackFunc){
         }
     });
 }
-function getDataGroups(callbackFunc){
+
+function storeGisData(data){
+    gisData = data;
+    gis_data_stored = true;
+}
+
+function getGisGroups(callbackFunc){
     $.ajax({
         url: apiURI+'getdatagroups',
         type: "GET",
@@ -46,6 +57,46 @@ function getDataGroups(callbackFunc){
         }
     });
 }
+
+function storeGisGroups(data){
+    gisGroups = data;
+    gis_groups_stored = true;
+}
+
+function loadDataGroupSelector(element){
+    element.append('<option value="*">All</option>');
+    $.each(gisGroups, function(i,v){
+        element.append('<option value="'+v.id+'">'+v.name+'</option>');
+    });
+}
+
+function addMetaFieldAttributes(key_name){
+    /** Accept Key Name and return a string containing HTML <input> attributes */
+    var field_attr = '';
+    $.each(gisMetaFields, function(i,v){
+        if(v.key_name == key_name){
+            field_attr+=' type="'+v.key_type+'"';
+            // Check for min attribute
+            if(v.min!="Null" && v.min!="undefined" && v.min!=undefined)
+                field_attr+=' min="'+v.min+'"';
+            // Check for Max Attribute
+            if(v.max!="Null" && v.max!="undefined" && v.max!=undefined)
+                field_attr+=' max="'+v.max+'"';
+            // Check for Step Attribute
+            if(v.step!="Null" && v.step!="undefined" && v.step!=undefined)
+                field_attr+=' step="'+v.step+'"';
+            // Check for Max-Len Attribute
+            if(v.max_len!="Null" && v.max_len!="undefined" && v.max_len!=undefined)
+                field_attr+=' max-len="'+v.max_len+'"';
+            // Check for Required Attribute
+            if(v.required!="Null" && v.required!=undefined && v.required!="undefined" && v.required=="True") 
+                field_attr+=' required';
+            return false;   // End the $.each Loop
+        }
+    });
+    return field_attr;  //Return the Final String
+}
+
 function validateField(field, showErrors=true){
     var val = field.val();
     var len = val.length;
@@ -138,4 +189,96 @@ function validateField(field, showErrors=true){
     field.tooltip("hide");    //Hide tooltip if no errors were found
     field.parent("div.form-group").removeClass("has-error").addClass("has-success"); //Add Bootstrap has-success clas to the field
     return true;    //Return true
+}
+
+function filterGisDataByGroup(group_id, data){
+    if(data==undefined)
+        data = gisData;
+    var filteredArray = [];
+    if(group_id == "*")
+        return data;
+    $.each(data, function(index, value){
+        if(value.data_group == group_id){
+            filteredArray.push(value);
+        }
+    });
+    return filteredArray;
+}
+
+function filterGisData(key, val, condition){
+    /** Filter GisData and Return Array containing filtered data
+     * 
+     *  Data type and format remains same
+     *  checks for key_type attribute for key
+     */
+    var filteredGisData = [];
+    $.each(gisData, function(i,v){
+        /** Iterate through gisData array 
+         *  i: Contains Array Index
+         *  v: Contains gisData Object
+        **/
+        $.each(v, function(index, value){
+            /** Match keys to find Filter Key 
+             *  index: Contains Key Name from gisDataArray Object
+             *  value: Contains Value of the key 
+            **/
+            if(index == key){
+                var key_type = getKeyType(key);     //Get Key Type
+                if(key_type == "number"){
+                    val = parseFloat(val);  //Parse as float if key_type is number
+                    value = parseFloat(value);  //Parse as float if key_type is number
+                }
+                /** If Filter Key and gisData Key is natched **/
+                if(condition == "<"){
+                    /** if Filter condition is 'Less Than' **/
+                    if(value < val){
+                        filteredGisData.push(v);
+                    }
+                }
+                if(condition == ">"){
+                    /** if Filter condition is 'Greater Than' **/
+                    if(value > val){
+                        filteredGisData.push(v);
+                    }
+                }
+                if(condition == "="){
+                    /** if Filter Condition is 'Equal to' **/
+                    if(value == val){
+                        filteredGisData.push(v);
+                    }
+                }
+                if(condition == ">="){
+                    /** if Filter Condition is 'Greater than or Equal to' **/
+                    if(value >= val){
+                        filteredGisData.push(v);
+                    }
+                }
+                if(condition == "<="){
+                    /** if Filter Condition is 'Less than or equal to' **/
+                    if(value <= val){
+                        filteredGisData.push(v);
+                    }
+                }
+                return false;   //End $.each loop inner
+            }
+        }); 
+    });
+    return filteredGisData;
+} 
+
+function getKeyType(key_name){
+    /** Iterate through Meta Fields Array and return key_type on matching passed key */
+    var key_type;
+    $.each(gisMetaFields, function(i,v){
+        if(v.key_name == key_name){
+            key_type = v.key_type;
+            return false;   //Break $.each loop
+        }
+    });
+    return key_type;
+}
+
+function showNotification(msg, type){
+    /** Shows Global Notification using notify.js */
+    $.notify(msg, {position:"bottom left", className:type});
 }
