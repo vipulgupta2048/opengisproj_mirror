@@ -26,3 +26,5 @@ class options(models.Model):
     
     class Meta:
         db_table = "options"
+
+

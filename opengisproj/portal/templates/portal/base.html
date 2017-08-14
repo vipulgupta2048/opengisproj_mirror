@@ -20,6 +20,10 @@
         <script src="{% static 'portal/js/jquery.min.js' %}"></script>
         <script src="{% static 'portal/js/bootstrap.min.js' %}"></script>
         <script src="{% static 'portal/js/functions.js' %}"></script>
+        <script>
+            //GLobal CSRF Access Token
+            var csrftoken = "{{ csrf_token }}";
+        </script>
         {% block js %}
         {% endblock %}
 

@@ -16,6 +16,41 @@ function getmetafields(callbackFunc){
     });
 }
 
+function importgisdata(callbackFunc){
+    $.ajax({
+        url: apiURI+'importgisdata',
+        type: "POST",
+        data: "csrfmiddlewaretoken="+csrftoken,
+        dataType: "JSON",
+        success: function(response){
+            r = response;
+            callbackFunc(r);
+        },
+        error: function(response){
+            console.log("Error");
+            console.log(response);
+        }
+    });
+}
+
+function getExcelDataFromMapping(mapping, callbackFunc){
+    var mappingString = JSON.stringify(mapping);
+    $.ajax({
+        url: apiURI+'getexceldatafrommapping',
+        type: 'POST',
+        data: 'csrfmiddlewaretoken='+csrftoken+"&mapping="+mappingString,
+        dataType: "JSON",
+        success: function(response){
+            r = response;
+            callbackFunc(r);
+        },
+        error: function(response){
+            console.log("Error");
+            console.log(response);
+        }
+    });
+}
+
 function getGisData(callbackFunc){
     $.ajax({
         url: apiURI+'getgisdata',

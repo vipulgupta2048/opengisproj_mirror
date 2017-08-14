@@ -1,0 +1,99 @@
+{% extends 'portal/base.html' %}
+{% load static %}
+
+{% block title %}Import{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'portal/css/bootstrap-table.min.css' %}" />
+{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Upload</button>
+  </form>
+
+   <div class="row width-inherit">
+        <h1 class="text-center">GIS Data Import</h1>
+        <div class="row">
+            <div class="col-xs-12">
+                <h3 class="text-center">Check GIS Parameters</h3>
+            </div>
+            <div class="container">
+                <div class="col-xs-12">
+                    <form id="addNewImportCheckForm">
+                        <div class="form-error text-center text-danger"></div>
+                        {% csrf_token %}
+                        <div class="form-group Check-group">
+
+                        </div>
+                        <button type="submit" class="btn btn-primary center-block" id="addNewCheckBtn">Confirm Parameter Check</button>
+                    </form> 
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'portal/js/bootstrap-table.min.js' %}"></script>
+    <script>
+        $(document).ready(function(e){
+            var form = $("#addNewImportCheckForm");
+            var apiURI = '/portal/ajax/';
+            var submitBtn = $("#addNewCheckBtn");
+            var errorBox = form.find(".form-error");
+            var tableError = $(".table-error");
+            var metaFields = [];
+            var excelFields = [];
+            var CheckGroup = $(".Check-group");
+            var is_excel_field_loaded = false, is_meta_field_loaded = false;
+            getmetafields(storeData);
+            importgisdata(excelField_generate);
+            key_name_generate();
+            function excelField_generate(excel_data){
+                excelFields = excel_data;
+                is_excel_field_loaded = true;
+            }
+
+            function storeData(data){
+                metaFields = data;
+                is_meta_field_loaded = true;
+            }
+            function key_name_generate(){
+                var timer = setInterval(function(){
+                    if(is_excel_field_loaded == true && is_meta_field_loaded == true){
+                        clearInterval(timer);
+                        console.log(metaFields);
+                        var html;
+                        for (var x in metaFields){
+                            console.log("I am fucking!!!");
+                            html = '<label for="key_name">'+metaFields[x].label+' (required)</label>';
+                            html += '<select class="form-control keyMapping" name="'+metaFields[x].key_name+'" id="'+metaFields[x].key_name+'" class="check_name" data-db-key="'+metaFields[x].key_name+'" required>';
+                            for (var y in excelFields){
+                                html += '<option value="'+excelFields[y]+'">'+excelFields[y]+'</option>';
+                            }
+                            html += '</select>';
+                            CheckGroup.append(html);
+                        }
+                    }
+                }, 200);   
+            }
+            submitBtn.click(function(e){
+                e.preventDefault();
+                var mapping = [];
+                CheckGroup.find(".keyMapping").each(function(e){
+                    var obj = {};
+                    obj["db_key"] = $(this).attr("data-db-key");
+                    obj["excel_key"] = $(this).val();
+                    mapping.push(obj);
+                });
+                getExcelDataFromMapping(mapping, readExcelData);
+            });
+            function readExcelData(data){
+                console.log(data);
+            }
+        });
+    </script>
+{% endblock %}

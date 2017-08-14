@@ -5,3 +5,16 @@
     This is home page for portal. If you are seeing it without logging in, that means it's a bug and should be informed ASAP.
 {% endblock %}
 
+{% block js %}
+<script>
+    var arr;
+    getmetafields(storeData);
+
+    function storeData(data){
+        arr = data;
+        console.log(arr);
+    }
+
+</script>
+{% endblock %}
+

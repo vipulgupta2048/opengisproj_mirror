@@ -30,9 +30,15 @@ def addParam(request):
     return render(request, 'portal/add-param.html')
 def reports(request):
     if request.user.is_authenticated == False:
-        return redirect('/accounts/login?next=/portal/reports')
+        return redirect('/account/login?next=/portal/reports')
     return render(request, 'portal/reports.html')
-
+def importView(request):
+    if request.user.is_authenticated == False:
+        return redirect('/account/login?next=/portal/importView')
+    return render(request, 'portal/importView.html')
+#def importView(request):
+ #   test()
+   # return JsonResponse("Success", safe=False)
 def processAjax(request, action):
     if request.user.is_authenticated == False:
         return JsonResponse("Unauthenticated Request", safe=False)
@@ -70,6 +76,20 @@ def processAjax(request, action):
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="importgisdata":
+        if(request.method == "POST"):
+            post_data = request.POST
+            res = import_gis_data()
+            return JsonResponse(res, safe=False, content_type="text/html")
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="getexceldatafrommapping":
+        if(request.method == "POST"):
+            post_data = request.POST
+            res = get_excel_data_from_mapping(post_data)
+            return JsonResponse(res, safe=False, content_type="text/html")
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
     elif action=="removedata":
         if(request.method == "POST"):
             post_data = request.POST
@@ -77,7 +97,7 @@ def processAjax(request, action):
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
-    elif action=="editdata":
+    elif action == "editdata" :
         if(request.method == "POST"):
             post_data = request.POST
             res = edit_gis_data(meta_key=post_data['key'],data_id=post_data['dataId'],new_value=post_data['value'], user=request.user)
