@@ -3,6 +3,7 @@
 <html>
     <head>
         <title>{% block title %} {% endblock %}</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1.0" />
         <link rel="stylesheet" href="{% static 'portal/css/bootstrap.min.css' %}" />
         <link rel="stylesheet" href="{% static 'portal/css/main.css' %}" />
         {% block css %}
@@ -10,8 +11,8 @@
     </head>
     <body>
         {% include 'portal/partials/menu.html' %}
-        <section id="content">
-            <div class="container">
+        <section id="content"> 
+            <div class="container no-padding no-margin block-center width-100-p">
                 {% block content %}
                     This is browse view. Edit me in /portal/templates/browse.html
                 {% endblock %}
