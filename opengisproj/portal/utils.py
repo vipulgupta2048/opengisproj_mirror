@@ -1,7 +1,8 @@
 import logging
 from .models import *
 import json
-
+import shapefile
+import os
 def install(user):
     temp = options.objects.create(option_name="meta_field",value='{"key_name": "bod", "label": "BOD", "key_type": "number", "min": "", "max": "", "max_len": "", "step": "0.000001", "required": "True"}')
     temp.save()
@@ -318,3 +319,16 @@ def edit_data_group(group_id, key, new_value, user):
         toReturn["msg"] = e
         toReturn["errcode"] = "500"
     return toReturn
+
+def shapefile_reader():
+    fileUrl = os.getcwd()+'\portal\static\portal\shapefiles\data1\lines'
+    sf = shapefile.Reader(fileUrl)
+    shapes = sf.shapes()
+    data = []
+    for x in range(len(shapes)):
+        curr_shape = sf.shape(x)
+        pairs = []
+        for point in range(len(curr_shape.points)):
+            pairs.append({"lat":curr_shape.points[point][1], "lng":curr_shape.points[point][0]})
+        data.append(pairs)
+    return data
