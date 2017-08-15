@@ -2,30 +2,61 @@
 {% load static %}
 
 {% block title %}Add Data{% endblock %}
-
 {% block content %}
-    <div class="row width-inherit">
-        <div class="col-xs-12">
-            <h3 class="text-center">Add New GIS Data</h3>
-        </div>
-        <div class="row">
-            <div class="container">
-                <div class="col-xs-12">
-                    <form id="addNewDataForm">
-                        {% csrf_token %}
-                        <div class="form-group">
-                            <label for="dataGroupSelect">Select a Data Group</label>
-                            <select id="dataGroupSelect" name="data_group" class="form-control dataGroupContainer" required>
-                                <option></option>
-                            </select>
-                        </div>
-                        <div id="metaFieldsContainer">
-                        </div>
-                    </form> 
-                </div>
+<style>
+#background-image{
+  position: fixed;
+  background-image: url("../../static/portal/images/World.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  top: 0px;
+  z-index: -999;
+  width: 100%;
+  overflow: hidden;
+}
+.sectionHeader{
+  text-align: left;
+  font-size: 50px;
+  margin-bottom: 25px;
+  margin-top: 25px;
+  color: #4d4d4d;
+  font-weight: 600;
+  width: 100%;
+  border-bottom: 10px solid;
+  border-image: linear-gradient(to right,green 20px, yellow 20px, yellow 40px, red 40px, red 60px, teal 60px, teal 80px) 5;
+  padding: 10px;
+  font-family: 'Dosis', sans-serif;
+}
+#addNewDataForm{
+  background-color: white;
+  padding: 20px;
+  margin-bottom: 100px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  -webkit-box-shadow: 0px 0px 3px -1px rgba(0,0,0,0.75);
+  -moz-box-shadow: 0px 0px 3px -1px rgba(0,0,0,0.75);
+  box-shadow: 0px 0px 3px -1px rgba(0,0,0,0.75);
+}
+</style>
+      <div id="background-image"></div>
+        <div class="container">
+          <div class="col-xs-12">
+              <h3 class="sectionHeader">Add Data</h3>
+          </div>
+            <div class="col-xs-12">
+                <form id="addNewDataForm">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="dataGroupSelect">Select a Data Group</label>
+                        <select id="dataGroupSelect" name="data_group" class="form-control dataGroupContainer" required>
+                            <option></option>
+                        </select>
+                    </div>
+                    <div id="metaFieldsContainer">
+                    </div>
+                </form>
             </div>
         </div>
-    </div>
 {% endblock %}
 
 {% block js %}
@@ -35,7 +66,7 @@
             var form = $("#addNewDataForm");
             var metaFieldsContainer = $("#metaFieldsContainer");
             var apiURI = '/portal/ajax/';
-            var submitBtn = '<button type="submit" id="addNewDataBtn" class="btn btn-primary btn-lg">Add</button>';
+            var submitBtn = '<button type="submit" id="addNewDataBtn" class="btn btn-primary center-block">Add</button>';
             var groupSelector = $("#dataGroupSelect");
 
             function init(){
@@ -52,7 +83,7 @@
                         groupSelector.on("change",function(){
                             if($(this).val() == ""){
                                 initalizeForm();    //Empty Form if  no group is selected
-                                return false;  
+                                return false;
                             }
                             // Filter parameters
                             var filteredFields = filterGisParametersByGroup($(this).val(), gisMetaFields);
@@ -70,7 +101,7 @@
                                     html+=' step="'+v.step+'"';
                                 if(v.max_len!="Null" && v.max_len!="undefined")
                                     html+=' max-len="'+v.max_len+'"';
-                                if(v.required!="Null" && v.required!=undefined && v.required!="undefined" && v.required=="True") 
+                                if(v.required!="Null" && v.required!=undefined && v.required!="undefined" && v.required=="True")
                                     html+=' required';
                                 html+='></div>';
                                 addToForm(html);    //Add the field to form
@@ -78,7 +109,7 @@
                             form.find("input, select").change(function(){
                                 // On change Validate value
                                 validateField($(this));
-                            }); 
+                            });
                             addToForm(submitBtn);   //Add Submit Button
                             submitBtn = $("#addNewDataBtn");    //select submit btn
                         });
@@ -101,7 +132,7 @@
                 });
                 return toReturn;
             }
-            
+
             form.submit(function(e){
                 //Submits new data to server
                 e.preventDefault();
@@ -119,7 +150,7 @@
                         r = response;
                         processResponse(r);
                     },
-                    error: function(response){
+                  error: function(response){
                         console.log("Error");
                         console.log(response);
                     }
@@ -141,5 +172,6 @@
             }
             init();
         });
+        document.getElementById("background-image").style.height = (screen.height*1.6)+('px');
     </script>
 {% endblock %}

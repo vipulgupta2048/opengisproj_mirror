@@ -6,12 +6,18 @@
         <meta name="viewport" content="width=device-width,initial-scale=1.0" />
         <link rel="stylesheet" href="{% static 'portal/css/bootstrap.min.css' %}" />
         <link rel="stylesheet" href="{% static 'portal/css/main.css' %}" />
+        <style>
+        .container-fluid{
+          padding: 0!important;
+          margin: 0!important;
+        }
+        </style>
         {% block css %}
         {% endblock %}
         </head>
     <body>
         {% include 'portal/partials/menu.html' %}
-        <section id="content"> 
+        <section id="content">
             <div class="container-fluid">
                 {% block content %}
                     This is browse view. Edit me in /portal/templates/browse.html
