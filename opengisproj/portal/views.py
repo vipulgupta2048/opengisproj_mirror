@@ -120,5 +120,12 @@ def processAjax(request, action):
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="getshapefilecoord":
+        if(request.method == "GET"):
+            post_data = request.POST
+            res = shapefile_reader()
+            return JsonResponse(res, safe=False)
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
     else:
         return JsonResponse("Invalid Action", safe=False)
