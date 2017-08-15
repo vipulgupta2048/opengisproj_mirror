@@ -1,10 +1,41 @@
+<style>
+.dropdown{
+  padding: 20px;
+  color:#777;
+}
+.dropdown:hover{
+  color: #333;
+}
+.navbar{
+	background-color: rgba(0,0,0,0);
+	z-index: 999;
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 1px 5px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.2);
+  height: 64px;
+  font-size: 18px;
+  margin-bottom: 2px;
+}
+.navbar a{
+  padding: 20px!important;
+  line-height: 25px!important;
+}
+.dropdown a{
+  padding: 10px!important;
+  line-height: 20px!important;
+}
+</style>
 <div class="navbar navbar-default">
     <div class="container-fluid">
         <ul class="nav navbar-nav">
             <li><a href="/portal">Home</a></li>
-            <li><a href="/portal/add">Add New GIS Data</a></li>
-            <li><a href="/portal/browse">Browse</a></li>
-            <li><a href="/portal/parameters">Parameters</a></li>
+            <li>
+              <div class="dropdown">
+                <div data-toggle="dropdown">Database<span class="caret"></span></div>
+                  <ul class="dropdown-menu">
+                    <li><a href="/portal/parameters ">Edit Table</a></li>
+                    <li><a href="/portal/browse">View Data</a></li>
+                </ul>
+              </div>
+            <li>
             <li><a href="/portal/reports">Reports</a></li>
             <li><a href="/account/logout/">Logout</a></li>
         </ul>

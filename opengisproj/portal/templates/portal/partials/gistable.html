@@ -26,9 +26,10 @@
                     gisTable = table;
                     bindGisDataRemove();
                     $(".loading-text").hide();
+                    displayBtns();
                 }
             },3000);
-            
+
         }
         function populateMetaFields(data){
             metaFieldsRaw = data;
@@ -65,7 +66,7 @@
                         field_attr+=' step="'+v.step+'"';
                     if(v.max_len!="Null" && v.max_len!="undefined")
                         field_attr+=' max-len="'+v.max_len+'"';
-                    if(v.required!="Null" && v.required!=undefined && v.required!="undefined" && v.required=="True") 
+                    if(v.required!="Null" && v.required!=undefined && v.required!="undefined" && v.required=="True")
                         field_attr+=' required';
                     return false;
                 }
@@ -119,7 +120,7 @@
                         cell.html(value);
                         var ind = gisTable.find("tr").index(cell.parents("tr"))-1;
                         gisTable.bootstrapTable('updateCell',{index:ind, field:key, value:value});
-                        gisTable.bootstrapTable('resetView');  
+                        gisTable.bootstrapTable('resetView');
                         tableError.fadeOut();
                         tableError.removeClass("alert-danger").addClass("alert-success").html("Successfully Updated!").fadeIn();
                     }else{
@@ -136,7 +137,7 @@
                             });
                             submitEditGisDataBtn.removeClass("glyphicon-refresh").addClass("glyphicon-ok");
                             tableError.fadeOut();
-                            tableError.removeClass("alert-success").addClass("alert-danger").html("Successfully Updated!").fadeIn();    
+                            tableError.removeClass("alert-success").addClass("alert-danger").html("Successfully Updated!").fadeIn();
                         }
                     }
                 }
@@ -184,7 +185,7 @@
                         tableError.removeClass("alert-success").addClass("alert-danger");
                         tableError.html("Unable to Delete due to "+r.msg);
                         tableError.fadeIn();
-                    }   
+                    }
                 }
                 bindGisDataRemove();
             }

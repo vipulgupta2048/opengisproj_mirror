@@ -13,7 +13,7 @@
                 <div class="col-xs-12">
                     <form id="addNewDataForm">
                         {% csrf_token %}
-                    </form> 
+                    </form>
                 </div>
             </div>
         </div>
@@ -26,7 +26,7 @@
         $(document).ready(function(e){
             var form = $("#addNewDataForm");
             var apiURI = '/portal/ajax/';
-            var submitBtn = '<button type="submit" id="addNewDataBtn" class="btn btn-default">Add</button>';
+            var submitBtn = '<button type="submit" id="addNewDataBtn" class="btn btn-primary center-block">Add</button>';
             /*
             var rand_count = 0;
             var chance = new Chance(Math.random()); */
@@ -45,14 +45,14 @@
                         html+=' step="'+v.step+'"';
                     if(v.max_len!="Null" && v.max_len!="undefined")
                         html+=' max-len="'+v.max_len+'"';
-                    if(v.required!="Null" && v.required!=undefined && v.required!="undefined" && v.required=="True") 
+                    if(v.required!="Null" && v.required!=undefined && v.required!="undefined" && v.required=="True")
                         html+=' required';
                     html+='></div>';
                     addToForm(html);
                 });
                 form.find("input").change(function(){
                     validateField($(this));
-                }); 
+                });
                 addToForm(submitBtn);
                 submitBtn = $("#addNewDataBtn");
                 //setTimeout(function(){addRandomData();},2000);
@@ -105,7 +105,7 @@
                             return false;
                         }
                     }
-                    
+
                 }
                 if(field.attr("max")!="undefined"){
                     if(field.attr("type")=="text"){
@@ -162,7 +162,7 @@
                         r = response;
                         processResponse(r);
                     },
-                    error: function(response){
+                  error: function(response){
                         console.log("Error");
                         console.log(response);
                     }

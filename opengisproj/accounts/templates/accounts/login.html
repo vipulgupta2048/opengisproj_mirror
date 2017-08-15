@@ -3,9 +3,12 @@
 {% block head %}
   {% load static %}
   <link rel="stylesheet" href="{% static 'accounts/login.css' %}">
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js" integrity="sha256-+u54FaX9J+k40eAcg5K2YzICSQjrEYBI9gju5nE3HfY=" crossorigin="anonymous"></script>
+  <script defer src="{% static 'accounts/particles.js' %}"></script>
 {% endblock %}
 
 {% block body %}
+<div id="particles-js"></div>
   <div class="container-fluid login-div">
     <h3>LOGIN</h3>
     <br>

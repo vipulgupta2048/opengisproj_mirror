@@ -4,11 +4,68 @@
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'portal/css/bootstrap-table.min.css' %}" />
+    <style>
+        .sectionHeader{
+          text-align: center;
+          font-size: 50px;
+          margin-bottom: 25px;
+          margin-top: 25px;
+          color: #4d4d4d;
+          font-weight: 600;
+          width: 100%;
+          border-bottom: 10px solid;
+          border-image: linear-gradient(to right,green 20px, yellow 20px, yellow 40px, red 40px, red 60px, teal 60px, teal 80px) 5;
+          padding: 10px;
+          font-family: 'Dosis', sans-serif;
+        }
+        .btn-primary{
+        margin: 20px;
+        margin-right: auto;
+        margin-left: auto;
+        padding: 10px;
+        }
+        .col-xs-1{
+            height: 25px;
+        }
+        .col-xs-11{
+        line-height: 35px;
+        }
+        #background-image{
+          position: fixed;
+          background-image: url("../../static/portal/images/World.svg");
+          background-position: center;
+          background-repeat: no-repeat;
+          top: 0px;
+          z-index: -999;
+          width: 100%;
+          overflow: hidden;
+        }
+        #gisParamTable{
+          background-color: #fff;
+        }
+        #addNewParamForm{
+          background-color: #fff;
+          padding: 20px;
+          margin-bottom: 100px;
+          border: 1px solid #ddd;
+          border-radius: 3px;
+        }
+        .fixed-table-pagination{
+          background-color: white;
+
+        }
+        .fixed-table-container{
+          margin-bottom: 100px;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
+    <div id="background-image"></div>
     <div class="row width-inherit">
-        <h1 class="text-center">GIS Parameters</h1>
+        <div class="container">
+          <h1 class="sectionHeader">GIS Parameters</h1>
+        </div>
         <div class="row">
             <div class="container">
                 <h3 class="text-center loading-text">Fetching Existing Fields</h3>
@@ -17,8 +74,8 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-xs-12">
-                <h3 class="text-center">Add New GIS Parameters</h3>
+            <div class="container">
+                <h3 class="sectionHeader">Add Parameters</h3>
             </div>
             <div class="container">
                 <div class="col-xs-12">
@@ -57,16 +114,16 @@
                             <label for="key_step">Parameter Step (leave blank for none)</label>
                             <input type="text" class="form-control" name="step" id="key_step" />
                         </div>
-                        <div class="form-group">
-                            <label for="key_required">Parameter Required (leave blank for not required)</label>
-                            <input type="checkbox" class="form-control" name="required" id="key_required" />
+                        <div style="height: 30px;" class="form-group">
+                            <input class="col-xs-1" type="checkbox" class="form-control" name="required" id="key_required" />
+                            <label class="col-xs-11" for="key_required">Parameter Required (leave blank for not required)</label>
                         </div>
-                        <div class="form_group">
-                            <label for="is_removable">Is Removable</label>
-                            <input type="checkbox" class="form-control" name="is_removable" id="is_removable" checked/>
+                        <div style="height: 30px;" class="form_group">
+                            <input class="col-xs-1" type="checkbox" class="form-control" name="is_removable" id="is_removable" checked/>
+                            <label class="col-xs-11" for="is_removable">Is Removable</label>
                         </div>
-                        <button type="submit" class="btn btn-primary center-block" id="addNewParamBtn">Add New Parameter</button>
-                    </form> 
+                        <button type="submit" class="btn btn-primary center-block" id="addNewParamBtn">Add Parameter</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -76,6 +133,7 @@
 {% block js %}
     <script src="{% static 'portal/js/bootstrap-table.min.js' %}"></script>
     <script>
+    document.getElementById("background-image").style.height = (screen.height*1.6)+('px');
         $(document).ready(function(e){
             var form = $("#addNewParamForm");
             var apiURI = '/portal/ajax/';
@@ -151,7 +209,7 @@
                 return html;
             }
             function init(){
-                getmetafields(displayMetaFields);   
+                getmetafields(displayMetaFields);
                 setTimeout(function(){
                     $("#gisParamTable").bootstrapTable({
                         columns: metaColumns,
@@ -205,7 +263,7 @@
                             tableError.fadeOut();
                             tableError.html("Unable to Delete due to "+r.msg);
                             tableError.fadeIn();
-                        }   
+                        }
                     }
                     bindParamRemove();
                 }
@@ -275,7 +333,7 @@
                             return false;
                         }
                     }
-                    
+
                 }
                 if(field.attr("max")!="undefined"){
                     if(field.attr("type")=="text"){
