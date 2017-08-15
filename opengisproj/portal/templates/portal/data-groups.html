@@ -1,6 +1,6 @@
 {% extends 'portal/base.html' %}
 {% load static %}
-{% block title %}Add Data{% endblock %}
+{% block title %}Data Groups{% endblock %}
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'portal/css/bootstrap-table.min.css' %}" />
@@ -8,74 +8,26 @@
 
 {% block content %}
     <div class="row width-inherit">
-        <h1 class="text-center">GIS Parameters</h1>
+        <h1 class="text-center">GIS Data Groups</h1>
         <div class="row">
             <div class="container">
-                <h3 class="text-center loading-text">Fetching Existing Fields</h3>
-                <div class="form-group container dataGroupSelectorContainer">
-                    <label>Select Data Group</label>
-                    <select class="dataGroupSelect form-control" id="gisParamTableGroupSelect">
-                        <option></option>
-                    </select>
-                </div>
-                <table id="gisParamTable"></table>
+                <h3 class="text-center loading-text">Fetching Existing Groups</h3>
+                <table id="gisDataGroupTable"></table>
             </div>
         </div>
         <div class="row">
             <div class="col-xs-12">
-                <h3 class="text-center">Add New GIS Parameters</h3>
+                <h3 class="text-center">Add New GIS Data Groups</h3>
             </div>
             <div class="container">
                 <div class="col-xs-12">
-                    <form id="addNewParamForm">
-                        <div class="form-error text-center text-danger"></div>
+                    <form id="addNewGroupForm">
                         {% csrf_token %}
                         <div class="form-group">
-                            <label for="key_name">Parameter Identifier (required)</label>
-                            <input type="text" class="form-control" name="key_name" id="key_name" required/>
+                            <label for="group_name">Group Name(required)</label>
+                            <input type="text" class="form-control" name="group_name" id="group_name" required/>
                         </div>
-                        <div class="form-group">
-                            <label for="key_label">Parameter Label (required)</label>
-                            <input type="text" class="form-control" name="label" id="key_label" required/>
-                        </div>
-                        <div class="form-group">
-                            <label for="key_type">Parameter Type (required)</label>
-                            <select class="form-control" name="key_type" id="key_type" required>
-                                <option value=""></option>
-                                <option value="text">Text</option>
-                                <option value="number">Number</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="key_min">Parameter Min Value (leave blank for none)</label>
-                            <input type="text" class="form-control" name="min" id="key_min" />
-                        </div>
-                        <div class="form-group">
-                            <label for="key_max">Parameter Max Value (leave blank for none)</label>
-                            <input type="text" class="form-control" name="max" id="key_max" />
-                        </div>
-                        <div class="form-group">
-                            <label for="key_max_len">Parameter Max Length(leave blank for none)</label>
-                            <input type="text" class="form-control" name="max_len" id="key_max_len" />
-                        </div>
-                        <div class="form-group">
-                            <label for="key_step">Parameter Step (leave blank for none)</label>
-                            <input type="text" class="form-control" name="step" id="key_step" />
-                        </div>
-                        <div class="form-group">
-                            <label for="key_required">Parameter Required (leave blank for not required)</label>
-                            <input type="checkbox" class="form-control" name="required" id="key_required" />
-                        </div>
-                        <div class="form_group">
-                            <label for="is_removable">Is Removable</label>
-                            <input type="checkbox" class="form-control" name="is_removable" id="is_removable" checked/>
-                        </div>
-                        <div class="form-group dataGroupSelectorContainer">
-                            <label>Select Data Group</label>
-                            <select class="dataGroupSelect form-control" id="gisAddParamGroupSelect" name="data_group" required data-show-all="false">
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary center-block" id="addNewParamBtn">Add New Parameter</button>
+                        <button type="submit" class="btn btn-primary center-block" id="addNewDataGroupBtn">Add New Group</button>
                     </form> 
                 </div>
             </div>
@@ -87,34 +39,25 @@
     <script src="{% static 'portal/js/bootstrap-table.min.js' %}"></script>
     <script>
         $(document).ready(function(e){
-            var form = $("#addNewParamForm");
+            var form = $("#addNewGroupForm");
             var apiURI = '/portal/ajax/';
-            var submitBtn = $("#addNewParamBtn");
-            var errorBox = form.find(".form-error");
-            var paramGroupSelect = $('#gisParamTableGroupSelect');
-            var paramTable = $("#gisParamTable");
+            var submitBtn = $("#addNewDataGroupBtn");
+            var dataGroupTable = $("#gisDataGroupTable");
             var metaFields = [];
             var metaColumns = [{field: 'state', checkbox: true, align: 'center'},{field: "id", title: "Id" },
-                {field: "key_name", title: "Identifier", sortable: true }, {field: "label", title: "Label",
-                sortable: true},{field: "key_type", title: "Type", sortable: true},
-                {field: "min", title: "Min Value", sortable: true},{field: "max", title: "Max Value",
-                sortable: true},{field: "max_len", title: "Max Length", sortable: true},
-                {field: "step", title: "Step", sortable: true},{field: "required", title: "Required",
-                sortable: true },{field: "data_group", title: "Data Group",
-                sortable: true },{field: "is_removable", title: "Removable?",
+                {field: "name", title: "Group Name", sortable: true },{field: "is_removable", title: "Removable?",
                 sortable: false },{field: 'action', title: 'Actions', align: 'center', formatter: actionFormatter}];
             function actionFormatter(value, row, index){
-                html = '<a href="#" class="paramRemoveBtn"><i class="glyphicon glyphicon-remove"></i></a>';
+                html = '<a href="#" class="dataGroupRemoveBtn"><i class="glyphicon glyphicon-remove"></i></a>';
                 return html;
             }
             function init(){
-                loadDataGroupSelector($(".dataGroupSelect"));
                 var tableTimer = setInterval(function(){
-                    if(gis_meta_fields_stored == true){
+                    if(gis_groups_stored == true){
                         clearInterval(tableTimer);
-                        paramTable.bootstrapTable({
+                        dataGroupTable.bootstrapTable({
                             columns: metaColumns,
-                            data: gisMetaFields,
+                            data: gisGroups,
                             clickToSelect: true,
                             pagination: true,
                             pageSize: 10,
@@ -127,25 +70,24 @@
                             onDblClickCell: editCellData,
                         });
                         $(".loading-text").hide();
-                        bindParamRemove();
+                        bindDataGroupRemove();
                     }
-                });
+                },200);
             }
-            function bindParamRemove(){
-                $(".paramRemoveBtn").on("click", function(e){
+            function bindDataGroupRemove(){
+                $(".dataGroupRemoveBtn").on("click", function(e){
                     e.preventDefault();
-                    removeParam($(this).parents("tr"));
+                    removeGroup($(this).parents("tr"));
                 });
             }
-            function removeParam(row){
-                $(".paramRemoveBtn").off("click");
+            function removeGroup(row){
+                $(".dataGroupRemoveBtn").off("click");
                 var id = row.attr("data-uniqueid");
-                var group_id = getParameterGroupId(id);
-                var r = confirm("This will delete all data associated with parameter #"+id+" and Group #"+group_id);
+                var r = confirm("This will delete all data associated with Group #"+id);
                 if(r == true){
                     $.ajax({
-                        url: apiURI + 'removeparam',
-                        data: "id="+id+"&data_group="+group_id+"&csrfmiddlewaretoken="+'{{ csrf_token }}',
+                        url: apiURI + 'removedatagroup',
+                        data: "group_id="+id+"&csrfmiddlewaretoken="+'{{ csrf_token }}',
                         dataType: "JSON",
                         method: "POST",
                         success: function(response){
@@ -157,23 +99,23 @@
                         }
                     });
                 }else{
-                    bindParamRemove();
+                    bindDataGroupRemove();
                 }
                 function processResponse(r){
                     if(r.status == "success"){
-                        $("#gisParamTable").bootstrapTable('removeByUniqueId',id);
+                        dataGroupTable.bootstrapTable('removeByUniqueId',id);
                         showNotification("Removed Successfully!","success");
                     }else{
                         if(r.status == "error"){
                             showNotification("Unable to Delete due to "+r.msg,"error");
                         }   
                     }
-                    bindParamRemove();
+                    bindDataGroupRemove();
                 }
             }
             function editCellData(field, value, row, element){
                 /** Converts the Data Table's <td> to <input> to allow data to be modified and store in database 
-                 * Function accepts parameters according to onDblClickCell Event of Bootstrap Table
+                 * Function accepts dataGroupeters according to onDblClickCell Event of Bootstrap Table
                  * callback(field, value, row, $element)
                  * field: the field name corresponding to the clicked cell, 
                  * value: the data value corresponding to the clicked cell, 
@@ -199,83 +141,63 @@
                 /** Create a Input Ele  ment and Insert it into the <td> element **/
                 html += '<div class="form-group">';
                 var flag = 0;
-                form.find("input").each(function(e){
-                    if($(this).attr("name") == key){
-                        html += '<input type='+$(this).attr("type")+' class="form-control editGisParamInput"';
-                        if($(this).attr("required")!="undefined" && $(this).attr("required") == undefined){
-                            html += ' required';
-                        }
-                        if($(this).type="checkbox"){
-                            if(value=="True")
-                                html += " checked";
-                        }else{
-                            html += ' value="'+value+'"';
-                        }
-                        html += '>';
-                        flag = 1;
-                    }
-                });
-                if(flag==0){
-                   form.find("select").each(function(e){
-                        if($(this).attr("name") == key){
-                            html += '<select class="form-control editGisParamInput"';
-                            if($(this).attr("required")!="undefined" && $(this).attr("required") != undefined){
-                                html += ' required';
-                            }
-                            html += '>';
-                            html += $(this).html().replace('value="'+value+'"','value="'+value+'" selected');
-                            html += "</select>";
-                            flag = 1;
-                        }
-                    }); 
+                if(key == "is_removable"){
+                    html += '<input type="checkbox"';
+                    if(field[0].checked)
+                        html+= ' checked';
+                    html += ' required ';
                 }
-                html += '<br><i class="glyphicon glyphicon-remove pull-right icon-btn closeEditGisParamBtn"></i><i class="glyphicon'+
-                    ' glyphicon-ok submitEditGisParamBtn pull-right icon-btn"></i></div>';
+                else
+                    html += '<input type="text"';
+                html+= ' class="form-control editDataGroupInput">';
+                html += '<br><i class="glyphicon glyphicon-remove pull-right icon-btn closeEditDataGroupBtn"></i><i class="glyphicon'+
+                    ' glyphicon-ok submitEditDataGroupBtn pull-right icon-btn"></i></div>';
                 element.html(html);
                 
-                var gisParamInput = element.find(".editGisParamInput");   // Select the newly created Input Element
+                var dataGroupInput = element.find(".editDataGroupInput");   // Select the newly created Input Element
                 /** Bind keydown handler to new element **/
-                gisParamInput.on("keydown", function(e){
+                dataGroupInput.on("keydown", function(e){
                     $this = $(this);
                     /** Submit the new data on "Enter" **/
                     if(e.keyCode==13){
                         e.preventDefault();
-                        processEditGisParamInput($this, key, data_id);
+                        processEditDataGroupInput($this, key, data_id);
                     }
                 });
                 /** Bind Click Handler to newly created Submit Button **/
-                element.find(".submitEditGisParamBtn").on("click", function(){
-                    processEditGisParamInput(gisParamInput, key, data_id);    // Process the Input
+                element.find(".submitEditDataGroupBtn").on("click", function(){
+                    processEditDataGroupInput(dataGroupInput, key, data_id);    // Process the Input
                 });
                 /** Bind Click Handler to New Created Close Button **/
-                element.find(".closeEditGisParamBtn").on("click",function(){
+                element.find(".closeEditDataGroupBtn").on("click",function(){
                     element.html(value);    //Restore Previous Value
                     element.removeClass("edit-mode");   // Exit Edit Mode
                     showNotification("Cancelled!","error");
                 });
             }
-            function processEditGisParamInput(field, key, param_id){
+            function processEditDataGroupInput(field, key, dataGroup_id){
+                console.log(field);
             /** Validate and Submit Data entered in Edit Data Mode **/
                 if(validateField(field)){
                     var parent = field.parents("td.edit-mode"); //Select parent <td>
                     var parentRow = parent.parents("tr");   //Select parent <tr>
                     field.off("keydown");   //Disable Keydown handler
                     field.attr("disabled","disabled");  //Disable Input
-                    var submitEditGisDataBtn = field.parents("td").find(".submitEditGisParamBtn");
+                    var submitEditDataGroupBtn = field.parents("td").find(".submitEditDataGroupBtn");
                     //Change Icon and Remove Click Handler from the Edit Cell Submit Button
-                    submitEditGisDataBtn.removeClass("glyphicon-ok").addClass("glyphicon-refresh").off("click");    
+                    submitEditDataGroupBtn.removeClass("glyphicon-ok").addClass("glyphicon-refresh").off("click");    
                     var value = field.val();    //Store Input Value
                     /** Create data to be sent to server **/
-                    if(key=="required" || key=="is_removable"){
+                    if(key=="is_removable"){
                         if(field[0].checked)
                             value = "True";
                         else
                             value = "False"
                     }
                         
-                    var data = "key="+key+"&paramId="+param_id+"&value="+value+"&csrfmiddlewaretoken={{ csrf_token }}";
+                    var data = "key="+key+"&group_id="+dataGroup_id+"&value="+value+"&csrfmiddlewaretoken={{ csrf_token }}";
                     $.ajax({
-                        url: apiURI+"editparam",
+                        url: apiURI+"editdatagroup",
                         type: "POST",
                         data: data,
                         dataType: "JSON",
@@ -290,29 +212,29 @@
                             parent.html(value);   // Update Value
                             var parentRowIndex = gisTable.find("tr").index(parentRow)-1;
                             /** Update Table Cell **/
-                            paramTable.bootstrapTable('updateCell',{index:parentRowIndex, field:key, value:value, reinit:false});
+                            dataGroupTable.bootstrapTable('updateCell',{index:parentRowIndex, field:key, value:value, reinit:false});
                             showNotification('Successfully Updated '+data_id+":"+key, 'success');    //Notify The user
                         }else{
                             if(r.status == "error"){
                                 field.tooltip({title:r.msg, trigger: "manual", placement:"auto bottom"});
                                 field.tooltip("show");
                                 /** Rebind All **/
-                                submitEditGisDataBtn.on("click", function(){processEditGisDataInput(field,key,data_id);})
+                                submitEditGisDataBtn.on("click", function(){processEditDataGroupInput(field,key,data_id);})
                                 field.removeAttr("disabled");
                                 field.on("keydown", function(e){
                                     if(e.keyCode == 13){
                                         e.preventDefault();
-                                        processEditGisDataInput($(this), key, data_id);
+                                        processEditDataGroupInput($(this), key, data_id);
                                     }
                                 });
-                                submitEditGisDataBtn.removeClass("glyphicon-refresh").addClass("glyphicon-ok");
+                                submitEditDataGroupBtn.removeClass("glyphicon-refresh").addClass("glyphicon-ok");
                                 showNotification("Error Occured "+data_id+":"+key, "error");
                             }
                         }
                     }
                 }
             }
-            form.find("input, select").on("change", function(e){
+            form.find("input").on("change", function(e){
                 validateField($(this));
             });
 
@@ -329,8 +251,7 @@
 
             function validateForm(){
                 var toReturn = false;
-                form.find("input, select").each(function(e){
-                    console.log($(this));
+                form.find("input").each(function(e){
                     if($(this).parent("div").hasClass("hidden")){
                         toReturn = true;
                         return false;
@@ -341,29 +262,20 @@
                 });
                 return toReturn;
             }
-
-            paramGroupSelect.change(function(e){
-                var filtered_data = filterGisParametersByGroup($(this).val());
-                paramTable.bootstrapTable('load',filtered_data);                
-                bindParamRemove();
-            });
-
             form.submit(function(e){
                 e.preventDefault();
                 if(!validateForm()){
-                    errorBox.html("Please Correct the details below!").show();
+                    showNotification("Please correct the errors!","error");
                     return false;
                 }
-                errorBox.hide();
                 var data = form.serialize();
                 submitBtn.html("Processing");
                 $.ajax({
-                    url: apiURI + "addnewparam",
+                    url: apiURI + "addnewdatagroup",
                     type: "POST",
                     data: data,
                     dataType: "JSON",
                     success: function(response){
-                        console.log(response);
                         r = response;
                         processResponse(r);
                     },
@@ -375,12 +287,11 @@
                 function processResponse(r){
                     if(r.status=="success"){
                         submitBtn.html("Success");
-                        getMetaFields(storeMetaFields);
-                        var metaFieldTimer = setInterval(function(){
-                            if(gis_meta_fields_stored == true){
-                                clearInterval(metaFieldTimer);
-                                var filteredFields = filterGisParametersByGroup(paramGroupSelect.val());
-                                paramTable.bootstrapTable('load',filteredFields);
+                        getGisGroups(storeGisGroups);
+                        var timer = setInterval(function(){
+                            if(gis_groups_stored == true){
+                                clearInterval(timer);
+                                dataGroupTable.bootstrapTable('load',gisGroups);
                                 bindParamRemove();
                                 showNotification("Added Successfully!","success");
                             }
@@ -389,14 +300,13 @@
                     }else{
                         if(r.status=="error"){
                             submitBtn.html("Error");
-                            errorBox.html(r.message).show();
-                            if(r.errcode=="KEY_EXISTS"){
+                            showNotification("Error: "+r.message, "error");
+                            if(r.errcode=="GROUP_EXISTS"){
                                 field = $("#key_name");
-                                field.tooltip({title:"This identifier already exist", trigger: "manual", placement:"auto bottom"});
+                                field.tooltip({title:"This Group already exist", trigger: "manual", placement:"auto bottom"});
                                 field.tooltip("show");
                                 field.parent("div").removeClass("has-success").addClass("has-error");
                                 field.focus();
-                                showNotification("Error", "error");
                             }
                             setTimeout(function(){submitBtn.html("Add");},2000);
                         }
@@ -405,7 +315,7 @@
             });
             function resetForm(){
                 form[0].reset();
-                submitBtn.html("Add");
+                submitBtn.html("Add New Group");
                 form.find(".has-success").removeClass(".has-success");
                 form.find(".has-error").removeClass(".has-error");
             }

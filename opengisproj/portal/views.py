@@ -28,6 +28,10 @@ def addParam(request):
     if request.user.is_authenticated == False:
         return redirect('/account/login?next=/portal/parameters')
     return render(request, 'portal/add-param.html')
+def dataGroups(request):
+    if request.user.is_authenticated == False:
+        return redirect('/account/login?next=/portal/datagroups')
+    return render(request, 'portal/data-groups.html')
 def reports(request):
     if request.user.is_authenticated == False:
         return redirect('/accounts/login?next=/portal/reports')
@@ -42,11 +46,8 @@ def processAjax(request, action):
     elif action=="addNewData":
         if request.method == "POST":
             post_data = request.POST
-            res = str(add_new_data(post_data, request.user))
-            toReturn = {}
-            toReturn["status"] = "success"
-            toReturn["id"] = res
-            return JsonResponse(toReturn, safe=False)
+            res = add_new_data(post_data, request.user, ret_json=True)
+            return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
     elif action=="getgisdata":
@@ -66,7 +67,7 @@ def processAjax(request, action):
     elif action=="removeparam":
         if(request.method == "POST"):
             post_data = request.POST
-            res = remove_param(option_id=post_data['id'], user=request.user)
+            res = remove_param(option_id=post_data['id'], group_id=post_data['data_group'], user=request.user)
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
@@ -81,6 +82,41 @@ def processAjax(request, action):
         if(request.method == "POST"):
             post_data = request.POST
             res = edit_gis_data(meta_key=post_data['key'],data_id=post_data['dataId'],new_value=post_data['value'], user=request.user)
+            return JsonResponse(res, safe=False)
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="editparam":
+        if(request.method == "POST"):
+            post_data = request.POST
+            res = edit_gis_param(param_key=post_data['key'],opt_id=post_data['paramId'],new_value=post_data['value'], user=request.user)
+            return JsonResponse(res, safe=False)
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="getdatagroups":
+        if(request.method == "GET"):
+            get_data = request.GET
+            res = get_data_groups()
+            return JsonResponse(res, safe=False)
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="addnewdatagroup":
+        if(request.method == "POST"):
+            post_data = request.POST
+            res = add_data_group(post_data, request.user)
+            return JsonResponse(res, safe=False)
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="removedatagroup":
+        if(request.method == "POST"):
+            post_data = request.POST
+            res = remove_data_group(group_id = post_data['group_id'], user=request.user)
+            return JsonResponse(res, safe=False)
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="editdatagroup":
+        if(request.method == "POST"):
+            post_data = request.POST
+            res = edit_data_group(group_id = post_data['group_id'], key = post_data['key'], new_value = post_data['value'], user=request.user)
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)

@@ -12,7 +12,7 @@
     <body>
         {% include 'portal/partials/menu.html' %}
         <section id="content"> 
-            <div class="container no-padding no-margin block-center width-100-p">
+            <div class="container-fluid">
                 {% block content %}
                     This is browse view. Edit me in /portal/templates/browse.html
                 {% endblock %}
@@ -20,7 +20,15 @@
         </section>
         <script src="{% static 'portal/js/jquery.min.js' %}"></script>
         <script src="{% static 'portal/js/bootstrap.min.js' %}"></script>
+        <script src="{% static 'portal/js/notify.min.js' %}"></script>
         <script src="{% static 'portal/js/functions.js' %}"></script>
+        <script>
+            var gisMetaFields, gisData, gisGroups;
+            var gis_data_stored = false, gis_meta_fields_stored = false, gis_groups_stored = false;
+            getMetaFields(storeMetaFields);
+            getGisData(storeGisData);
+            getGisGroups(storeGisGroups);
+        </script>
         {% block js %}
         {% endblock %}
 
