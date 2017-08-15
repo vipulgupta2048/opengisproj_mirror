@@ -10,10 +10,14 @@
 {% block content %}
     <div class="row">
         <h1 class="text-center">Browse</h1>
+        
+        <div class="form-group container">
+            <label>Select Data Group</label>
+            <select class="gisDataGroupSelect form-control"></select>
+        </div>
         <h3 class="text-center loading-text">Loading Table</h3>
         <div class="container">
-            <div class="table-error text-danger text-center"></div>
-            <table id="gisDataTable"></table>
+            <table id="gisDataTable" data-is-editable = "true"></table>
         </div>
     </div>
 {% endblock %}
