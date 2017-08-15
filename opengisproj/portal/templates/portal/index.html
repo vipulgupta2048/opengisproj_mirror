@@ -19,16 +19,6 @@
         -moz-box-shadow: 0px 0px 24px 1px rgba(0,0,0,0.75);
         box-shadow: 0px 0px 24px 1px rgba(0,0,0,0.75);
     }
-    #background-image{
-        position: absolute;
-        background-image: url("../../static/portal/images/World.svg");
-        background-position: center;
-        background-repeat: no-repeat;
-        top: 0px;
-        z-index: -999;
-        width: 100%;
-        overflow: hidden;
-    }
     .card{
         -webkit-box-shadow: 0px 0px 25px -5px rgba(0,0,0,0.75);
         -moz-box-shadow: 0px 0px 25px -5px rgba(0,0,0,0.75);
@@ -81,8 +71,8 @@
 {% endblock %}
 
 {% block content %}
-    <div id="background-image"></div>
     <div class="container">
+        <br>
         <h2 class="text-right">Welcome, {{ request.user.username }}</h2>
         <h3 class="text-right">This is your dashboard! You can preform actions suggested below</h3>
         <div class="col-xs-12">
@@ -118,7 +108,4 @@
     </div>
 {% endblock %}
 {% block js %}
-<script>
-    document.getElementById("background-image").style.height = (screen.height-120)+('px');
-</script>
 {% endblock %}

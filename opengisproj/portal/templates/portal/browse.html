@@ -19,16 +19,6 @@
             padding: 10px;
             font-family: 'Dosis', sans-serif;
         }
-        #background-image{
-            position: fixed;
-            background-image: url("../../static/portal/images/World.svg");
-            background-position: center;
-            background-repeat: no-repeat;
-            top: 0px;
-            z-index: -999;
-            width: 100%;
-            overflow: hidden;
-        }
         #gisDataTable{
             background-color: #fff;
         }
@@ -70,7 +60,6 @@
 {% endblock %}
 
 {% block content %}
-    <div id="background-image"></div>
       <div  class="container">
         <h1 class="sectionHeader">Browse</h1>
       </div>
@@ -99,7 +88,6 @@
         $(document).on("gisDataLoaded", function(){
           displayBtns(); //Displays the additional buttons.
         });
-        document.getElementById("background-image").style.height = (screen.height*1.6)+('px');
     </script>
     {% include 'portal/partials/gistable.html' %}
 {% endblock %}

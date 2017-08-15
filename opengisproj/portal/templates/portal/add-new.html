@@ -4,16 +4,6 @@
 {% block title %}Add Data{% endblock %}
 {% block content %}
 <style>
-#background-image{
-  position: fixed;
-  background-image: url("../../static/portal/images/World.svg");
-  background-position: center;
-  background-repeat: no-repeat;
-  top: 0px;
-  z-index: -999;
-  width: 100%;
-  overflow: hidden;
-}
 .sectionHeader{
   text-align: left;
   font-size: 50px;
@@ -38,7 +28,6 @@
   box-shadow: 0px 0px 3px -1px rgba(0,0,0,0.75);
 }
 </style>
-      <div id="background-image"></div>
         <div class="container">
           <div class="col-xs-12">
               <h3 class="sectionHeader">Add Data</h3>
@@ -172,6 +161,5 @@
             }
             init();
         });
-        document.getElementById("background-image").style.height = (screen.height*1.6)+('px');
     </script>
 {% endblock %}
