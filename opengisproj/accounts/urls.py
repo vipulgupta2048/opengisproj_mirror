@@ -3,7 +3,7 @@
 from django.conf.urls import url
 from django.contrib.auth.views import login, logout
 from django.views.generic import RedirectView
-from forms import LoginForm
+from .forms import LoginForm
 from . import views
 
 
