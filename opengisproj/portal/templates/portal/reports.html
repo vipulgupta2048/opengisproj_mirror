@@ -6,6 +6,12 @@
                 <div class="row">
                     <h4 class="text-center">Filter by</h4>
                     <div class="col-xs-12 form-group">
+                        <label>Select Data Group</label>
+                        <select class="gisDataGroupSelect form-control" required data-updateTable="false">
+                            <option></option>
+                        </select>
+                    </div>
+                    <div class="col-xs-12 form-group">
                         <label for="gisFilterParamterKey">Match Key</label>
                         <select id="gisFilterParameterKey" class="form-control" required>
                         </select>
@@ -27,12 +33,11 @@
                     <div class="col-xs-12 form-group">
                         <button type="button" class="btn btn-primary form-control" id="gisFilterSubmitBtn">Filter</button>
                     </div>
+                    <div class="col-xs-12 form-group">
+                        <button class="btn btn-primary form-control" id="showAllBtn">Show All</button>
+                    </div>
                 </div>
                 <div class="row">
-                    <div class="col-xs-12 form-group">
-                        <label>Select Data Group</label>
-                        <select class="gisDataGroupSelect form-control" required></select>
-                    </div>
                     <table id="gisDataTable" data-is-editable="false"></table>
                 </div>
             </section>
@@ -67,8 +72,8 @@
     var cent_long = 80.12; //Sihora, MP
     var api_loaded = false, map_loaded = false;     //Variables to Check if API and Map is loaded
     var curr_markers = [];  //Stores Current Map Markers
-    var curr_data = [];
-    
+    var curr_data = [], columns = [];
+    var dataGroupSelect = $(".gisDataGroupSelect");
     function getCurrCoord(){
         /** Get Curr User's Cooordinates and store them**/
         if(navigator.geolocation){
@@ -116,7 +121,8 @@
             /** Set Repeated Function Call to check if GIS Data is loaded **/
             if(gis_data_stored == true){
                 clearInterval(mapDataDefaultTimer); // Clear the interval once data is loaded
-                loadGisDataToMap(gisData);  // Load the data to map
+                data = filterGisDataByGroup(dataGroupSelect.val());
+                loadGisDataToMap(data);  // Load the data to map
             }
         });
     }
@@ -167,12 +173,17 @@
         var gisFilterParameterKey = $("#gisFilterParameterKey");
         var loadFilterKeysTimer = setInterval(function(){
             /** Set a repeated function call to check if meta fields array is loaded and then execute statements **/
-            if(gis_meta_fields_stored == true){
+            if(gis_meta_fields_stored == true && gis_groups_stored == true){
                 clearInterval(loadFilterKeysTimer);
-                $.each(gisMetaFields, function(i,v){
-                    /** Iterate through gisMetaFields Array and append new Option **/
-                    gisFilterParameterKey.append('<option value="'+v.key_name+'">'+v.label+'</option>');
+                $(".gisDataGroupSelect").on("change", function(){
+                    var filteredFields = filterGisParametersByGroup($(this).val());
+                    gisFilterParameterKey.empty();
+                    $.each(filteredFields, function(i,v){
+                        /** Iterate through gisMetaFields Array and append new Option **/
+                        gisFilterParameterKey.append('<option value="'+v.key_name+'">'+v.label+'</option>');
+                    });
                 });
+                
             }
         }, 200);
     }
@@ -211,22 +222,78 @@
         e.preventDefault();    //Disable default action
         $this = $(this);    
         $this.attr("disabled","disabled");  //Disable the button to prevent duplicate clicks
-        
+        var gisFilterGroup = $(".gisDataGroupSelect");
+        if(gisFilterGroup.val() == "" || gisFilterGroup.val() == undefined){
+            alert("Please select a Data Group!");
+            return false;
+        }
         var gisFilterKey = $("#gisFilterParameterKey");    //Select Filter Key
         var gisFilterCondition = $("#gisFilterParameterCondition");    //Select Filter Condition
         var gisFilterValue = $("#gisFilterParameterValue");    //Select Filter Value
-        var filteredArray = filterGisData(gisFilterKey.val(), gisFilterValue.val(), gisFilterCondition.val());  //Filter Data
-        curr_data = filteredArray;
-        gisTable.bootstrapTable("load",filteredArray);    //Update GIS table
+        var filteredArray = filterGisData(gisFilterKey.val(), gisFilterValue.val(), gisFilterCondition.val(), gisFilterGroup.val());  //Filter Data
+        generateTableColumns();
+        var timer = setInterval(function(){
+            if(meta_loaded == true){
+                // when columns are recreated
+                clearInterval(timer);
+                //reload the table with new data
+                gisTable.bootstrapTable('refreshOptions', {columns: columns, data: filteredArray});
+                bindGisDataRemove();
+            }
+        },200);
         loadGisDataToMap(filteredArray);    //Load filtered data to map
         setTimeout(function(){
             $this.removeAttr("disabled");   //Re-enable Submit Button
         },1500);
     });
-    $(document).on("gisDataGroupChange", function(e){
-        var val = $(".gisDataGroupSelect").val();
-        loadGisDataToMap(filterGisDataByGroup(val, curr_data));       
+    $("#showAllBtn").click(function(e){
+        e.preventDefault();
+        if(dataGroupSelect.val() == "" || dataGroupSelect.val() == undefined){
+            alert("Please Select a Data Group");
+            return false;
+        }
+        var filteredArray = filterGisDataByGroup(dataGroupSelect.val());  //Filter Data
+        generateTableColumns();
+        var timer = setInterval(function(){
+            if(meta_loaded == true){
+                // when columns are recreated
+                clearInterval(timer);
+                //reload the table with new data
+                gisTable.bootstrapTable('refreshOptions', {columns: columns, data: filteredArray});
+                bindGisDataRemove();
+            }
+        },200);
+        loadGisDataToMap(filteredArray);
     });
+    function generateTableColumns(){
+        meta_loaded = false;    //Status as not loaded
+        /**
+         * Generate Boostrap Table Columns
+         * 
+        **/ 
+        /** Push Default Columns **/
+        var tableColumnTimer = setInterval(function(){
+            if(gis_meta_fields_stored == false || dataGroupSelect.attr("data-groups-loaded")=="undefined" 
+        || dataGroupSelect.attr("data-groups-loaded")==undefined || dataGroupSelect.attr("data-groups-loaded")!="true")
+                return false;
+            clearInterval(tableColumnTimer);
+            columns = [];
+            columns.push({field: 'state', checkbox: true, align: 'center'});
+            columns.push({field: "id", title: "Id", editable: false});
+            var filteredFields = filterGisParametersByGroup(dataGroupSelect.val());
+            /** Add Columns from Database Array **/ 
+            $.each(filteredFields, function(i,v){
+                columns.push({field: v.key_name, title: v.label, sortable:true});
+            });
+            columns.push({field: 'action', title: 'Actions', align: 'center', formatter: actionFormatter});
+            /** Add Actions here **/
+            function actionFormatter(value, row, index){
+                html = '<a href="#" class="gisDataRemoveBtn"><i class="glyphicon glyphicon-remove"></i></a>';
+                return html;
+            }
+            meta_loaded = true;
+        }, 200);
+    }
     init();     //Run Initial Tasks
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD2DVlvcLu7o2m-6OhfbipppHEzRofJh48&callback=initMap"></script>

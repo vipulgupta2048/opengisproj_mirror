@@ -1,6 +1,7 @@
 var apiURI = '/portal/ajax/';
 
 function getMetaFields(callbackFunc){
+    gis_meta_fields_stored = false;
     $.ajax({
         url: apiURI+'getmetafields',
         type: "GET",
@@ -64,9 +65,17 @@ function storeGisGroups(data){
 }
 
 function loadDataGroupSelector(element){
-    element.append('<option value="*">All</option>');
-    $.each(gisGroups, function(i,v){
-        element.append('<option value="'+v.id+'">'+v.name+'</option>');
+    $.each(element, function(index,value){
+        var $this = $(this);
+        var timer = setInterval(function(){
+            if(gis_groups_stored == true){
+                clearInterval(timer);
+                $.each(gisGroups, function(i,v){
+                    $this.append('<option value="'+v.id+'">'+v.name+' (id:'+v.id+' )</option>');
+                });
+            }
+            $this.attr("data-groups-loaded","true");
+        }, 200);
     });
 }
 
@@ -98,10 +107,13 @@ function addMetaFieldAttributes(key_name){
 }
 
 function validateField(field, showErrors=true){
+    if(field.attr("type") == "checkbox")
+        return true;
+    console.log(field.attr("type"));
     var val = field.val();
     var len = val.length;
     /** Check Required Attribute */
-    if(field.attr("required")!="undefined"){
+    if(field.attr("required")!="undefined" && field.attr("required")!=undefined){
         if(len==0){
             if(showErrors){
                 field.tooltip({title:"This Field is required!", trigger:"manual", placement:"auto bottom"});
@@ -205,7 +217,7 @@ function filterGisDataByGroup(group_id, data){
     return filteredArray;
 }
 
-function filterGisData(key, val, condition){
+function filterGisData(key, val, condition, group_id){
     /** Filter GisData and Return Array containing filtered data
      * 
      *  Data type and format remains same
@@ -217,54 +229,81 @@ function filterGisData(key, val, condition){
          *  i: Contains Array Index
          *  v: Contains gisData Object
         **/
-        $.each(v, function(index, value){
-            /** Match keys to find Filter Key 
-             *  index: Contains Key Name from gisDataArray Object
-             *  value: Contains Value of the key 
-            **/
-            if(index == key){
-                var key_type = getKeyType(key);     //Get Key Type
-                if(key_type == "number"){
-                    val = parseFloat(val);  //Parse as float if key_type is number
-                    value = parseFloat(value);  //Parse as float if key_type is number
-                }
-                /** If Filter Key and gisData Key is natched **/
-                if(condition == "<"){
-                    /** if Filter condition is 'Less Than' **/
-                    if(value < val){
-                        filteredGisData.push(v);
+        if(v.data_group == group_id){
+            $.each(v, function(index, value){
+                /** Match keys to find Filter Key 
+                 *  index: Contains Key Name from gisDataArray Object
+                 *  value: Contains Value of the key 
+                **/
+                if(index == key){
+                    var key_type = getKeyType(key);     //Get Key Type
+                    if(key_type == "number"){
+                        val = parseFloat(val);  //Parse as float if key_type is number
+                        value = parseFloat(value);  //Parse as float if key_type is number
                     }
-                }
-                if(condition == ">"){
-                    /** if Filter condition is 'Greater Than' **/
-                    if(value > val){
-                        filteredGisData.push(v);
+                    /** If Filter Key and gisData Key is natched **/
+                    if(condition == "<"){
+                        /** if Filter condition is 'Less Than' **/
+                        if(value < val){
+                            filteredGisData.push(v);
+                        }
                     }
-                }
-                if(condition == "="){
-                    /** if Filter Condition is 'Equal to' **/
-                    if(value == val){
-                        filteredGisData.push(v);
+                    if(condition == ">"){
+                        /** if Filter condition is 'Greater Than' **/
+                        if(value > val){
+                            filteredGisData.push(v);
+                        }
                     }
-                }
-                if(condition == ">="){
-                    /** if Filter Condition is 'Greater than or Equal to' **/
-                    if(value >= val){
-                        filteredGisData.push(v);
+                    if(condition == "="){
+                        /** if Filter Condition is 'Equal to' **/
+                        if(value == val){
+                            filteredGisData.push(v);
+                        }
                     }
-                }
-                if(condition == "<="){
-                    /** if Filter Condition is 'Less than or equal to' **/
-                    if(value <= val){
-                        filteredGisData.push(v);
+                    if(condition == ">="){
+                        /** if Filter Condition is 'Greater than or Equal to' **/
+                        if(value >= val){
+                            filteredGisData.push(v);
+                        }
                     }
+                    if(condition == "<="){
+                        /** if Filter Condition is 'Less than or equal to' **/
+                        if(value <= val){
+                            filteredGisData.push(v);
+                        }
+                    }
+                    return false;   //End $.each loop inner
                 }
-                return false;   //End $.each loop inner
-            }
-        }); 
+            }); 
+        };
     });
     return filteredGisData;
-} 
+}
+
+function filterGisParametersByGroup(group_id, data){
+    if(data==undefined)
+        data = gisMetaFields;
+    var filteredArray = [];
+    if(group_id == "*")
+        return data;
+    $.each(data, function(index, value){
+        if(value.data_group == group_id){
+            filteredArray.push(value);
+        }
+    });
+    return filteredArray;   
+}
+
+function getParameterGroupId(parameter_id){
+    var toReturn = null;
+    $.each(gisMetaFields, function(i,v){
+        if(v.id == parameter_id){
+            toReturn =  v.data_group;
+            return false;
+        }
+    });
+    return toReturn;
+}
 
 function getKeyType(key_name){
     /** Iterate through Meta Fields Array and return key_type on matching passed key */

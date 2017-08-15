@@ -4,7 +4,7 @@
         var gisTable = $("#gisDataTable");  //Select GIS Data Table
         var isTableEditable = gisTable.attr("data-is-editable");    //Check if it is editable
         var dataGroupSelect = $(".gisDataGroupSelect");    //Select Groups Container
-        var columns = [], meta_loaded, data_loaded;             
+        var columns = [], meta_loaded = false;    //columns[] stores parameters, meta_loaded stores Columns status(true/false)
         
         function loadGisDataTable(table){
             generateTableColumns();     //Create Table Columns in BootstrapTable Format
@@ -17,14 +17,21 @@
                         loadDataGroupSelector(dataGroupSelect);
                     }
                     dataGroupSelect.on("change", function(){
-                        var g_id = $(this).val();
-                        var data_filtered;
-                        if(g_id == "*")
-                            data_filtered = gisData;
-                        else
-                            data_filtered = filterGisData("data_group",g_id,"=");
-                        table.bootstrapTable('load', data_filtered);
-                        $(document).trigger('gisDataGroupChange');
+                        if($(this).attr("data-updateTable") == "false" || $(this).attr("data-updateTable") != undefined)
+                            return false;
+                        // Bind Data Group Selector with change event, filters table according to group id
+                        var g_id = $(this).val();   //get Group ID
+                        var data_filtered = filterGisDataByGroup(g_id);  //filter data by ID
+                        generateTableColumns(); //Recreate Table Columns
+                        var timer = setInterval(function(){
+                            if(meta_loaded == true){
+                                // when columns are recreated
+                                clearInterval(timer);
+                                //reload the table with new data
+                                table.bootstrapTable('refreshOptions', {columns: columns, data: data_filtered});
+                                bindGisDataRemove();
+                            }
+                        },200);
                     });
                 }, 200);
             }
@@ -34,11 +41,12 @@
                 **/
                 if(meta_loaded == true && gis_data_stored == true){
                     clearInterval(tableLoadedTimer);    //Stop this Function
-                    var tableOptions = {columns: columns, data: gisData, idField: "id", uniqueId: "id", 
+                    filteredData = filterGisDataByGroup(dataGroupSelect.val());
+                    var tableOptions = {columns: columns, data: filteredData, idField: "id", uniqueId: "id", 
                         clickToSelect: true, pagination: true, pageSize: 10, search: true, showColumns: true, 
                         showToggle: true, singleSelect: true, onDblClickCell: editCellData};
                     table.bootstrapTable(tableOptions);    //Initialize Table
-                    table.bootstrapTable('hideLoading');
+                    table.bootstrapTable('hideLoading');    //hide loading status from table
                     gisTable = table;   //Update GisTable Variable
                     bindGisDataRemove();    //Enable the Remove Row Buttons
                     $(".loading-text").hide();  //Hide Loading Table
@@ -47,20 +55,23 @@
         }
 
         function generateTableColumns(){
+            meta_loaded = false;    //Status as not loaded
             /**
              * Generate Boostrap Table Columns
              * 
             **/ 
             /** Push Default Columns **/
             var tableColumnTimer = setInterval(function(){
-                if(gis_meta_fields_stored == false)
+                if(gis_meta_fields_stored == false || dataGroupSelect.attr("data-groups-loaded")=="undefined" 
+            || dataGroupSelect.attr("data-groups-loaded")==undefined || dataGroupSelect.attr("data-groups-loaded")!="true")
                     return false;
                 clearInterval(tableColumnTimer);
+                columns = [];
                 columns.push({field: 'state', checkbox: true, align: 'center'});
                 columns.push({field: "id", title: "Id", editable: false});
-
+                var filteredFields = filterGisParametersByGroup(dataGroupSelect.val());
                 /** Add Columns from Database Array **/ 
-                $.each(gisMetaFields, function(i,v){
+                $.each(filteredFields, function(i,v){
                     columns.push({field: v.key_name, title: v.label, sortable:true});
                 });
                 columns.push({field: 'action', title: 'Actions', align: 'center', formatter: actionFormatter});
@@ -70,6 +81,7 @@
                     return html;
                 }
                 meta_loaded = true;
+                console.log(columns);
             }, 200);
         }
 
@@ -180,10 +192,12 @@
 
         function bindGisDataRemove(){
             /** Binds Remove Button in rows to delete the data **/
-            if(isTableEditable == 'false' || isTableEditable == false)
+            if(isTableEditable == 'false' || isTableEditable == false){
+                $(".gisDataRemoveBtn").hide();
                 return false;
+            }
 
-            $(".gisDataRemoveBtn").one("click", function(e){
+            $(".gisDataRemoveBtn").on("click", function(e){
                 e.preventDefault();
                 removeGisData($(this).parents("tr"));
             });
@@ -225,4 +239,34 @@
             }
         }
         loadGisDataTable(gisTable);
+
+        function generateGraphsData(callbackfunc){
+            var data = [];
+            var ignoredKeys = ['sample_identifier','latitude','longitude','year','id','data_group']
+            var timer = setInterval(function(){
+                if(gis_data_stored == true){
+                    clearInterval(timer);
+                    $.each(gisData, function(i,v){
+                        $.each(v, function(key,value){
+                            if(ignoredKeys.indexOf(key) == -1){
+                                var flag = -1;
+                                $.each(data,function(index,value){
+                                    if(value['name'] == key){
+                                        flag = index;
+                                        return false;
+                                    }
+                                });
+                                if(flag == -1){
+                                    data.push({"name":key,"label":key,"values":[]});
+                                    flag = data.length -1;
+                                }
+                                var obj = {"latitude":v['latitude'],"longitude":v['longitude'],"year":v['year'],"value":value};
+                                data[flag]['values'].push(obj);
+                            }
+                        });
+                    });
+                    callbackfunc(data);
+                }
+            },200);
+        }
     </script>

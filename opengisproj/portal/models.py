@@ -6,7 +6,7 @@ from datetime import datetime
 
 class data_groups(models.Model):
     name = models.CharField(max_length=100)
-
+    is_removable = models.BooleanField(default=True)
     class Meta:
         db_table = "data_groups"
 
@@ -30,6 +30,7 @@ class options(models.Model):
     option_name = models.CharField(max_length=100)
     value = models.TextField()
     is_removable = models.BooleanField(default=False)
+    data_group = models.ForeignKey(data_groups, null=True)
     
     class Meta:
         db_table = "options"

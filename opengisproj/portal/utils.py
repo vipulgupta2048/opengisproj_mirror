@@ -23,14 +23,15 @@ def get_meta_fields(getjson=False):
             fields = json.loads(str(d.value))
             for x in fields:
                 temp[x] = fields[x]
-            temp["id"] = d.id
+            temp["id"] = str(d.id)
             temp["is_removable"] = d.is_removable
+            temp["data_group"] = str(d.data_group.id)
             jsonFields.append(temp)
         return jsonFields
     except Exception as e:
         toReturn = {}
         toReturn["status"] = "error"
-        toReturn["msg"] = type(e) + e.message
+        toReturn["msg"] = e
         toReturn["errcode"] = "500"
         return toReturn
 
@@ -51,23 +52,24 @@ def get_meta():
     except Exception as e:
         toReturn = {}
         toReturn["status"] = "error"
-        toReturn["msg"] = type(e) + e.message
+        toReturn["msg"] = e
         toReturn["errcode"] = "500"
         return toReturn
 
-def is_meta_key(key):
+def is_meta_key(key, data_group):
     try: 
         fields = get_meta_fields()
         flag = False
         for x in fields:
-            if x['key_name'] == key:
+            print(x['data_group'])
+            if x['key_name'] == key and str(x['data_group']) == data_group :
                 flag = True
                 break
         return flag
     except Exception as e:
         toReturn = {}
         toReturn["status"] = "error"
-        toReturn["msg"] = type(e) + e.message
+        toReturn["msg"] = e
         toReturn["errcode"] = "500"
         return toReturn
 
@@ -83,7 +85,7 @@ def add_new_data(post_data, request_user, ret_json=False):
         for x in post_data:
             key = x
             val = post_data[key]
-            if(is_meta_key(key)):
+            if(is_meta_key(key, post_data["data_group"])):
                 if(is_first):
                     g = gis_data.objects.create(created_by=request_user, data_group = group_id)
                     g.save()
@@ -98,6 +100,7 @@ def add_new_data(post_data, request_user, ret_json=False):
             return gis_id.id
     except Exception as e:
         toReturn["status"] = "error"
+        print(e)
         toReturn["msg"] = e
         toReturn["errcode"] = "500"
     return toReturn
@@ -109,6 +112,7 @@ def get_data_groups():
             obj = {}
             obj['id'] = x.id
             obj['name'] = x.name
+            obj['is_removable'] = x.is_removable
             arr.append(obj)        
         return arr
     except Exception as e:
@@ -118,7 +122,7 @@ def add_param(data, user):
     toReturn = {}
     param = {}
     removable = False
-    if(is_meta_key(data['key_name'])):
+    if(is_meta_key(data['key_name'],data['data_group'])):
         toReturn["status"] = "error"
         toReturn["message"] = "Key Already Exists"
         toReturn["errcode"] = "KEY_EXISTS"
@@ -135,21 +139,22 @@ def add_param(data, user):
                 continue
             param[key] = val
         try:
+            group_id = data_groups.objects.filter(id=data["data_group"])[0]
             jsonParam = json.dumps(param)
-            p = options.objects.create(option_name="meta_field",value=jsonParam, is_removable = removable)
+            p = options.objects.create(option_name="meta_field",value=jsonParam, is_removable = removable, data_group = group_id)
             p.save()
             toReturn["status"] = "success"
             toReturn["message"] = str(p.id)
         except Exception as e:
             toReturn["status"] = "error"
-            toReturn["msg"] = type(e) + e.message
+            toReturn["msg"] = "Some error"
             toReturn["errcode"] = "500"
 
     return toReturn
 
-def remove_param(option_id, user):
+def remove_param(option_id, group_id, user):
     try:
-        obj = options.objects.filter(id=option_id)
+        obj = options.objects.filter(id=option_id, data_group = group_id)
         toReturn = {}
         if not obj:
             toReturn['status'] = "error"
@@ -159,8 +164,10 @@ def remove_param(option_id, user):
             if(obj[0].is_removable):
                 fields = json.loads(str(obj[0].value))
                 keyName = fields['key_name']
-                meta_rows = gis_data_meta.objects.filter(key=keyName)
-                meta_rows.delete()
+                gis_data_objects = gis_data.objects.filter(data_group = group_id)
+                for gis_obj in gis_data_objects:
+                    meta_rows = gis_data_meta.objects.filter(key=keyName, data=gis_obj)
+                    meta_rows.delete()
                 obj.delete()  
                 toReturn['status'] = "success"
             else:
@@ -169,7 +176,7 @@ def remove_param(option_id, user):
                 toReturn['errcode'] = "OPTION_IS_NOT_REMOVABLE"
     except Exception as e:
         toReturn["status"] = "error"
-        toReturn["msg"] = type(e) + e.message
+        toReturn["msg"] = e
         toReturn["errcode"] = "500"
 
     return toReturn
@@ -195,7 +202,7 @@ def remove_gis_data(data_id, user):
                 toReturn['errcode'] = "INTERNAL_ERROR"
     except Exception as e:
         toReturn["status"] = "error"
-        toReturn["msg"] = type(e) + e.message
+        toReturn["msg"] = e
         toReturn["errcode"] = "500"
 
     return toReturn
@@ -214,7 +221,100 @@ def edit_gis_data(meta_key, data_id, new_value, user):
             toReturn['status'] = "success"
     except Exception as e:
         toReturn["status"] = "error"
-        toReturn["msg"] = type(e) + e.message
+        toReturn["msg"] = e
         toReturn["errcode"] = "500"
 
+    return toReturn
+
+def edit_gis_param(param_key, opt_id, new_value, user):
+    toReturn = {}
+    try:
+        obj = options.objects.filter(id=opt_id)[0]
+        jsonFields = []
+        flag = False
+        if param_key == 'is_removable':
+            if new_value == "True":
+                obj.is_removable = True
+            else:
+                obj.is_removable = False
+            flag = True
+        else:
+            fields = json.loads(obj.value)
+            for attr in fields:
+                if(attr == param_key):
+                    fields[attr] = new_value
+                    flag = True
+                    break
+            if flag == False:
+                fields[param_key] = new_value
+            obj.value = json.dumps(fields)
+        obj.save()
+        toReturn['status'] = 'success'
+    except Exception as e:
+        toReturn["status"] = "error"
+        toReturn["msg"] = e
+        toReturn["errcode"] = "500"
+    return toReturn
+
+def add_data_group(data, user):
+    toReturn = {}
+    try:
+        removable = False
+        if 'is_removable' in data:
+            removable = True
+        group = data_groups.objects.create(name=data['group_name'],is_removable=removable)
+        group.save()
+        toReturn['status'] = "success"
+        toReturn['message'] = group.id
+    except Exception as e:
+        toReturn["status"] = "error"
+        toReturn["msg"] = e
+        toReturn["errcode"] = "500"
+    return toReturn
+
+def remove_data_group(group_id, user):
+    toReturn = {}
+    try:
+        obj = data_groups.objects.filter(id=group_id)
+        toReturn = {}
+        if not obj:
+            toReturn['status'] = "error"
+            toReturn['msg'] = "Group Id Not Found"
+            toReturn['errcode'] = "GROUP_DOES_NOT_EXIST"
+        else:
+            obj = obj[0]
+            if obj.is_removable == False:
+                toReturn['status'] = "error"
+                toReturn['msg'] = "Group Cannot be Deleted"
+                toReturn['errcode'] = "GROUP_NOT_REMOVABLE"
+            else:
+                obj_data = gis_data.objects.filter(data_group=obj)
+                for x in obj_data:
+                    obj_meta = gis_data_meta.objects.filter(data=x)
+                    obj_meta.delete()
+                obj_data.delete()
+                obj.delete()
+                toReturn['status'] = "success"
+    except Exception as e:
+        toReturn["status"] = "error"
+        toReturn["msg"] = e
+        toReturn["errcode"] = "500"
+    return toReturn
+def edit_data_group(group_id, key, new_value, user):
+    toReturn = {}
+    try:
+        obj = data_groups.objects.filter(id=group_id)[0]
+        if key == "name":
+            obj.name = new_value
+        elif key == "is_removable":
+            if(new_value == "False"):
+                obj.is_removable = False
+            else:
+                obj.is_removable = True
+        obj.save()
+        toReturn["status"] = "success"
+    except Exception as e:
+        toReturn["status"] = "error"
+        toReturn["msg"] = e
+        toReturn["errcode"] = "500"
     return toReturn
