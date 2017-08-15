@@ -50,7 +50,7 @@
                     gisTable = table;   //Update GisTable Variable
                     bindGisDataRemove();    //Enable the Remove Row Buttons
                     $(".loading-text").hide();  //Hide Loading Table
-                    displayBtns(); //Displays the additional buttons.
+                    $(document).trigger("gisTableLoaded");
                 }
             },3000);
         }
