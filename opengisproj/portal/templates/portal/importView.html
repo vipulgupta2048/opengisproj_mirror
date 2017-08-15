@@ -25,12 +25,17 @@
                     <form id="addNewImportCheckForm">
                         <div class="form-error text-center text-danger"></div>
                         {% csrf_token %}
-                        <div class="form-group Check-group">
-
-                        </div>
+                        <div class="form-group Check-group"></div>
                         <button type="submit" class="btn btn-primary center-block" id="addNewCheckBtn">Confirm Parameter Check</button>
                     </form> 
                 </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="container">
+                <h3 class="text-center loading-text">Data to be stored</h3>
+                <h4 class="text-center text-danger table-error"></h4>
+                <table id="gisImportTable"></table>
             </div>
         </div>
     </div>
@@ -89,7 +94,27 @@
                     obj["excel_key"] = $(this).val();
                     mapping.push(obj);
                 });
-                getExcelDataFromMapping(mapping, readExcelData);
+                excelData = getExcelDataFromMapping(mapping, readExcelData);
+                function init(){
+                getmetafields(displayMetaFields);   
+                setTimeout(function(){
+                    $("#gisImportTable").bootstrapTable({
+                        columns: metaFields,
+                        data: excelData,
+                        clickToSelect: true,
+                        pagination: true,
+                        pageSize: 10,
+                        search: true,
+                        showColumns: true,
+                        showToggle: true,
+                        singleSelect: true,
+                        idField: "id",
+                        uniqueId: "id",
+                    });
+                    $(".loading-text").hide();
+                    bindParamRemove();
+                },3000);
+            }
             });
             function readExcelData(data){
                 console.log(data);

@@ -4,6 +4,8 @@ from .models import *
 import json
 import numpy as np
 import pandas as pd
+import decimal
+from decimal import *
 
 def install(user):
     temp = options.objects.create(option_name="meta_field",value='{"key_name": "bod", "label": "BOD", "key_type": "number", "min": "", "max": "", "max_len": "", "step": "0.000001", "required": "True"}')
@@ -261,6 +263,11 @@ def get_excel_data_from_mapping(mapping):
                 print("Key:"+attr['key_name']+" type:"+attr['key_type']+" max: "+attr['max'])
                 obj[attr['key_name']] = excel_val #attr['step']
                 if attr['key_type'] == 'number':
+                    step = decimal.Decimal(float(attr['step']))
+                    step.as_tuple().exponent
+                    print(step)
+                    
+                    round(excel_val, step)
                     if float(excel_val) < float(attr['min']) or float(excel_val) > float(attr['max']):
                         print("flag is 1")
                         flag = 1
@@ -280,6 +287,7 @@ def get_excel_data_from_mapping(mapping):
     excelData["rejected"] = rejected
     print("excelData")
     print(excelData)
+    eD = pd.DataFrame(excelData)
     return excelData
 #   array = [{db_key:'lorem', excel_key:'ipsum'},{db_key:'', excel_key:''},{db_key:'', excel_key:''},{db_key:'', excel_key:''}]
 #   array = []
