@@ -30,16 +30,6 @@
         .col-xs-11{
         line-height: 35px;
         }
-        #background-image{
-          position: fixed;
-          background-image: url("../../static/portal/images/World.svg");
-          background-position: center;
-          background-repeat: no-repeat;
-          top: 0px;
-          z-index: -999;
-          width: 100%;
-          overflow: hidden;
-        }
         #gisParamTable{
           background-color: #fff;
         }
@@ -66,7 +56,6 @@
 {% endblock %}
 
 {% block content %}
-    <div id="background-image"></div>
     <div class="container">
         <div class="row">
           <h1 class="sectionHeader">GIS Parameters</h1>
@@ -148,7 +137,6 @@
 {% block js %}
     <script src="{% static 'portal/js/bootstrap-table.min.js' %}"></script>
     <script>
-    document.getElementById("background-image").style.height = (screen.height*1.6)+('px');
         $(document).ready(function(e){
             var form = $("#addNewParamForm");
             var apiURI = '/portal/ajax/';
