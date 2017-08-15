@@ -47,14 +47,13 @@
                         <button class="btn btn-primary form-control" id="showAllBtn">Show All</button>
                     </div>
                 </div>
-                <div class="row">
-                    <table id="gisDataTable" data-is-editable="false"></table>
+                <div class="row width-100-p">
+                    <table id="gisDataTable" data-is-editable="false" class="overflow-scroll col-xs-12"></table>
                 </div>
             </section>
             <section class="pull-left height-100 col-md-9 no-padding">
                 <div class="container height-inherit no-margin no-padding width-100-p">
                     <div id="gisMap" class="height-inherit">
-						<div id="map"></div>
                     </div>
                 </div>
             </section>
@@ -84,7 +83,7 @@
     var cent_lat = 28.1637151; //Sihora, MP
     var cent_long = 81.1170138; //Sihora, MP
     var api_loaded = false, map_loaded = false;
-    var curr_data = [], columns = [];
+    var curr_data = [], columns = [], curr_markers=[];
     var dataGroupSelect = $(".gisDataGroupSelect");
     
     var styles = {
@@ -247,45 +246,51 @@
     }
 
     $("#gisFilterSubmitBtn").click(function(e){
+        /** Click Event Handler for Filter Submit Button **/		
+        e.preventDefault();    //Disable default action		
+         $this = $(this);    		
+         $this.attr("disabled","disabled");  //Disable the button to prevent duplicate clicks		
+         var gisFilterGroup = $(".gisDataGroupSelect");		
+         if(gisFilterGroup.val() == "" || gisFilterGroup.val() == undefined){		
+             alert("Please select a Data Group!");		
+             return false;		
+         }		
+         var gisFilterKey = $("#gisFilterParameterKey");    //Select Filter Key		
+         var gisFilterCondition = $("#gisFilterParameterCondition");    //Select Filter Condition		
+         var gisFilterValue = $("#gisFilterParameterValue");    //Select Filter Value		
+         var filteredArray = filterGisData(gisFilterKey.val(), gisFilterValue.val(), gisFilterCondition.val(), gisFilterGroup.val());  //Filter Data		
+         generateTableColumns();		
+         var timer = setInterval(function(){		
+             if(meta_loaded == true){		
+                 // when columns are recreated		
+                 clearInterval(timer);		
+                 //reload the table with new data		
+                 gisTable.bootstrapTable('refreshOptions', {columns: columns, data: filteredArray});		
+                 bindGisDataRemove();		
+             }		
+         },200);		
+         loadGisDataToMap(filteredArray);    //Load filtered data to map		
+         setTimeout(function(){		
+             $this.removeAttr("disabled");   //Re-enable Submit Button		
+         },1500);		
+     });
+    $("#showAllBtn").click(function(e){
         e.preventDefault();
-        $this = $(this);
-        $(this).attr("disabled","disabled");
-        var gisFilterParameterKey = $("#gisFilterParameterKey");
-        var gisFilterParameterCondition = $("#gisFilterParameterCondition");
-        var gisFilterParameterValue = $("#gisFilterParameterValue");
-        var filteredArray = [];
-        $.each(data_cache, function(i,v){
-            $.each(v, function(index, value){
-                if(index == gisFilterParameterKey.val()){
-                    var temp = v;
-                    if(gisFilterParameterCondition.val() == "<"){
-                       if(value < gisFilterParameterValue.val()){
-                            filteredArray.push(temp);
-                        }
-                    }
-                    if(gisFilterParameterCondition.val() == ">"){
-                       if(value > gisFilterParameterValue.val()){
-                            filteredArray.push(temp);
-                        }
-                    }
-                    if(gisFilterParameterCondition.val() == "="){
-                       if(value == gisFilterParameterValue.val()){
-                            filteredArray.push(temp);
-                        }
-                    }
-                    if(gisFilterParameterCondition.val() == ">="){
-                       if(value >= gisFilterParameterValue.val()){
-                            filteredArray.push(temp);
-                        }
-                    }
-                    if(gisFilterParameterCondition.val() == "<="){
-                       if(value <= gisFilterParameterValue.val()){
-                            filteredArray.push(temp);
-                        }
-                    }
-                }
-            });
-        });
+        if(dataGroupSelect.val() == "" || dataGroupSelect.val() == undefined){
+            alert("Please Select a Data Group");
+            return false;
+         }
+        var filteredArray = filterGisDataByGroup(dataGroupSelect.val());  //Filter Data
+        generateTableColumns();
+        var timer = setInterval(function(){
+            if(meta_loaded == true){
+                // when columns are recreated
+                clearInterval(timer);
+                //reload the table with new data
+                gisTable.bootstrapTable('refreshOptions', {columns: columns, data: filteredArray});
+                bindGisDataRemove();
+            }
+        },200);
         loadGisDataToMap(filteredArray);
     });
     function generateTableColumns(){
