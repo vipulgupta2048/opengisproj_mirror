@@ -74,7 +74,7 @@
     var cent_lat = 23.48; //Sihora, MP
     var cent_long = 80.12; //Sihora, MP
     var api_loaded = false, map_loaded = false;
-    var curr_data = [], columns = [];
+    var curr_data = [], columns = [], curr_markers = [];
     var dataGroupSelect = $(".gisDataGroupSelect");
     
     var styles = {
@@ -88,8 +88,31 @@
             featureType: 'transit',
             elementType: 'labels.icon',
             stylers: [{visibility: 'off'}]
-          }
-        ]
+          },
+          { 
+			featureType: 'poi', 
+			elementType: 'labels.text', 
+			stylers: [{visibility: 'off'}] 
+		  },
+          { 
+			featureType: 'road.arterial',
+			stylers: [{visibility: 'off'}]
+		  },
+		  { featureType: 'road.highway',
+			elementType: 'labels',
+			stylers: [{visibility: 'off'}]
+		  },
+		  { 
+			featureType: 'road.local',
+			stylers: [{visibility: 'off'}]
+		  },
+		  { 
+			featureType: 'road.local', 
+			elementType: 'labels',  
+			stylers: [{visibility: 'off'}] 
+		  }
+          
+        ]    
     };
     function getCurrCoord(){
         /** Get Curr User's Cooordinates and store them**/
@@ -144,7 +167,37 @@
                 loadGisDataToMap(data);  // Load the data to map
             }
         });
+        $.ajax({
+            url: apiURI+'getshapefilecoord',
+            type:"GET",
+            datatype: "JSON",
+            success: function(response){
+                r = response;
+                plotMapShapeData(r);
+            },
+            error: function(response){
+                console.log(response);
+            } 
+        });
     }
+    function plotMapShapeData(data){
+        $.each(data,function(i,v){
+            var shapeData = v;
+            var path = new google.maps.Polyline({
+                path:shapeData,
+                geodesic: true,
+                strokeColor: '#FFFFFF',
+                strokeOpacity: 6.0,
+                strokeWeight: 3  
+            });
+            var timer = setInterval(function(){
+            if(map_loaded){
+                clearInterval(timer);
+                path.setMap(map);
+            }
+        });
+	});
+}
     function loadGisDataToMap(data){
         /** Loads Provided data to Map and removes existing data **/
         if(curr_markers.length>0){
@@ -316,3 +369,8 @@
 </script>
 {% include 'portal/partials/gistable.html' %}
 {% endblock %}
+
+
+
+
+		  
