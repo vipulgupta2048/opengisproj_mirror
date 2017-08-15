@@ -129,3 +129,7 @@ STATIC_URL = '/static/'
 
 #Login redirect
 LOGIN_REDIRECT_URL = '/portal/'
+
+#MEDIA Directory for uploads
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

@@ -34,3 +34,12 @@ class options(models.Model):
     
     class Meta:
         db_table = "options"
+
+class uploads(models.Model):
+    file_name = models.CharField(max_length=256)
+    description = models.TextField(blank=True)
+    file_ref = models.FileField(upload_to='uploads/%Y/%m/%d')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    file_meta = models.TextField()
+    class Meta:
+        db_table = "uploads"

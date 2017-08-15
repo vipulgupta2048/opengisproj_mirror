@@ -1,0 +1,14 @@
+<form method="post" enctype="multipart/form-data" action="/portal/fileupload/">
+    {% csrf_token %}
+    {% for x in form %}
+        <div class="form-group">
+            <label for="{{ x.id_for_label }}">{{ x.label }}</label>
+            {{ x }}
+        </div>
+    {% endfor %}
+    <div class="form-group">
+        <label for="id_file_meta">You are uploading:</label>
+        <input type="text" name="file_meta" value="{{ meta }}" disabled class="form-control" id="id_file_meta">
+    </div>
+    <button type="submit">Upload</button>
+</form>

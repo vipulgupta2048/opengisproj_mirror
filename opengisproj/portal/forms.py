@@ -1,8 +1,16 @@
 from django import forms
-from .utils import get_meta_fields
-class addEntryForm(forms.Form):
-    meta_fields = get_meta_fields()
-    f = {}
-    for x in meta_fields:
-        label = str(x.label)
-        f[x.key_name] = forms.CharField(label=label, max_length=100)
+from .models import uploads
+
+class UploadForm(forms.ModelForm):
+    class Meta:
+        model = uploads
+        fields = ('file_name', 'file_ref')
+        labels = {
+            'file_name': "Enter File Name",
+            'file_ref': "Select a file",
+        }
+        widgets = {
+            'file_name': forms.TextInput(attrs={'class':'form-control',  'required':True}),
+            'file_ref': forms.FileInput(attrs={'class':'form-control', 'required':True}),
+        }
+

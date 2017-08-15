@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from .utils import *
+from .forms import UploadForm
 # Create your views here.
 
 def demo(request):
@@ -36,7 +37,28 @@ def reports(request):
     if request.user.is_authenticated == False:
         return redirect('/accounts/login?next=/portal/reports')
     return render(request, 'portal/reports.html')
-
+def shapefilesManager(request):
+    if request.user.is_authenticated == False:
+        return redirect('/accounts/login?next=/portal/shapefiles')
+    if request.method == 'POST':
+        form = UploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            render(request, 'portal/shapefiles.html',{'form':form, 'meta':'shapefile', 'msg':"Saved"})
+    else:
+        form = UploadForm()
+    return render(request, 'portal/shapefiles.html',{'form':form, 'meta':'shapefile'})
+def fileupload(request):
+    if request.user.is_authenticated == False:
+        return redirect('/accounts/login?next=/portal/shapefiles')
+    if request.method == 'POST':
+        form = UploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            nextPage = request.POST['next']+'?msg=Uploaded+Successfully'
+            return render(request, nextPage)
+    else:
+        return HttpResponse(status=405)
 def processAjax(request, action):
     if request.user.is_authenticated == False:
         return JsonResponse("Unauthenticated Request", safe=False)
