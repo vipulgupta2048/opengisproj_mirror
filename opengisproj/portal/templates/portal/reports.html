@@ -73,10 +73,10 @@
     var mapsContainer = $("#gisMap")[0];    //Default Map Container
     var cent_lat = 23.48; //Sihora, MP
     var cent_long = 80.12; //Sihora, MP
-<<<<<<< HEAD
     var api_loaded = false, map_loaded = false;
-    var data_cache;
-    var curr_markers = [];
+    var curr_data = [], columns = [];
+    var dataGroupSelect = $(".gisDataGroupSelect");
+    
     var styles = {
         default: null,
         hide: [
@@ -91,15 +91,8 @@
           }
         ]
     };
-    function get_curr_cord(){
-=======
-    var api_loaded = false, map_loaded = false;     //Variables to Check if API and Map is loaded
-    var curr_markers = [];  //Stores Current Map Markers
-    var curr_data = [], columns = [];
-    var dataGroupSelect = $(".gisDataGroupSelect");
     function getCurrCoord(){
         /** Get Curr User's Cooordinates and store them**/
->>>>>>> master
         if(navigator.geolocation){
             navigator.geolocation.getCurrentPosition(storeCurrCoord);
         }
@@ -126,11 +119,6 @@
         api_loaded = true;
         showMap();  //Load Map once API is loaded
     }
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> master
     function showMap(){
         map = new google.maps.Map(mapsContainer, {
             center: {lat: cent_lat, lng: cent_long },
