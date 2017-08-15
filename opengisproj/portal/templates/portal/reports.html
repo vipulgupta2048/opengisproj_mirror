@@ -1,16 +1,34 @@
 {% extends 'portal/base.html' %}
 {% block title %}Reports{% endblock %}
 {% block content %}
-        <div class="row width-100-p no-margin">
+<style>
+.container-fluid{
+  margin: 0;
+  padding: 0;
+  margin-left: 15px;
+}
+#test{
+  margin-top: 15px;
+}
+</style>
+        <div id='test' class="row width-100-p">
             <section class="pull-left height-100 col-md-3 overflow-scroll">
                 <div class="row">
                     <h4 class="text-center">Filter by</h4>
                     <div class="col-xs-12 form-group">
-                        <select id="gisFilterParameterKey" class="form-control">
+                        <label>Select Data Group</label>
+                        <select class="gisDataGroupSelect form-control" required data-updateTable="false">
+                            <option></option>
                         </select>
                     </div>
                     <div class="col-xs-12 form-group">
-                        <select id="gisFilterParameterCondition" class="form-control">
+                        <label for="gisFilterParamterKey">Match Key</label>
+                        <select id="gisFilterParameterKey" class="form-control" required>
+                        </select>
+                    </div>
+                    <div class="col-xs-12 form-group">
+                        <label for="gisFilterParameterCondition">Condition</label>
+                        <select id="gisFilterParameterCondition" class="form-control" required>
                             <option value=">">Greater Than</option>
                             <option value="<">Less Than</option>
                             <option value="=">Equals</option>
@@ -19,20 +37,25 @@
                         </select>
                     </div>
                     <div class="col-xs-12 form-group">
-                        <input id="gisFilterParameterValue" class="form-control" placeholder="Value"/>
+                        <label for="gisFilterParameterValue">Value</label>
+                        <input id="gisFilterParameterValue" class="form-control" placeholder="Value" required/>
                     </div>
                     <div class="col-xs-12 form-group">
                         <button type="button" class="btn btn-primary form-control" id="gisFilterSubmitBtn">Filter</button>
                     </div>
+                    <div class="col-xs-12 form-group">
+                        <button class="btn btn-primary form-control" id="showAllBtn">Show All</button>
+                    </div>
                 </div>
                 <div class="row">
-                    <div class="text-center alert"  id="gisDataTableError"></div>
-                    <table id="gisDataTable"></table>
+                    <table id="gisDataTable" data-is-editable="false"></table>
                 </div>
             </section>
             <section class="pull-left height-100 col-md-9 no-padding">
                 <div class="container height-inherit no-margin no-padding width-100-p">
-                    <div id="gisMap" class="height-inherit"></div>
+                    <div id="gisMap" class="height-inherit">
+						<div id="map"></div>
+                    </div>
                 </div>
             </section>
         </div>
@@ -54,60 +77,103 @@
 {% endblock %}
 
 {% block js %}
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD2DVlvcLu7o2m-6OhfbipppHEzRofJh48&callback=initMap"async defer></script>
 <script>
-    var map;
-    var mapsContainer = $("#gisMap")[0];
-    var cent_lat = 23.48; //Sihora, MP
-    var cent_long = 80.12; //Sihora, MP
+    var map;    //Stores Map Instance
+    var mapsContainer = $("#gisMap")[0];    //Default Map Container
+    var cent_lat = 28.1637151; //Sihora, MP
+    var cent_long = 81.1170138; //Sihora, MP
     var api_loaded = false, map_loaded = false;
-    var data_cache;
-    var curr_markers = [];
-    function get_curr_cord(){
+    var curr_data = [], columns = [];
+    var dataGroupSelect = $(".gisDataGroupSelect");
+    
+    var styles = {
+        default: null,
+        hide: [
+          {
+            featureType: 'poi.business',
+            stylers: [{visibility: 'off'}]
+          },
+          {
+            featureType: 'transit',
+            elementType: 'labels.icon',
+            stylers: [{visibility: 'off'}]
+          }
+        ]
+    };
+    function getCurrCoord(){
+        /** Get Curr User's Cooordinates and store them**/
         if(navigator.geolocation){
-            navigator.geolocation.getCurrentPosition(storePos);
+            navigator.geolocation.getCurrentPosition(storeCurrCoord);
         }
-    } 
-    function storePos(position){
-        cent_lat = position.coords.latitude;
-        cent_long = position.coords.longitude;
+    }
+
+    function storeCurrCoord(position){
+        /** Store Current Coordinated Received from Navigator API into  variables and do after actions**/
+        cent_lat = position.coords.latitude;    //Store Latitude
+        cent_long = position.coords.longitude;  //Store Longitude
         var mapTimer = setInterval(function(){
+            /** Set Repeated Function Call to check if Map is loaded and then pan the map to current Location **/
             if(map_loaded){
-                map.panTo({lat:cent_lat, lng: cent_long});
-                clearInterval(mapTimer);
+                map.panTo({lat:cent_lat, lng: cent_long});  //Pan to current coordinates
+                clearInterval(mapTimer);    //Clear Interval once the map is loaded
             }
         },500);
     }
-    
+    function init(){
+        loadFilterKeys();   //Load Filter Keys
+        getCurrCoord();    //Load Current Co-ordinates
+    }
     function initMap(){
+        /** Default Function Called when Google Maps API is loaded successfully **/
         api_loaded = true;
+        showMap();  //Load Map once API is loaded
     }
     function showMap(){
         map = new google.maps.Map(mapsContainer, {
             center: {lat: cent_lat, lng: cent_long },
             zoom: 5,
-            mapTypeId: google.maps.MapTypeId.HYBRID, 
+            mapTypeId: google.maps.MapTypeId.HYBRID,
             panControl: true,
+            scrollwheel: true,
+            zoom: 7,
             zoomControl: true,
-            mapTypeControl: false,
+            mapTypeControl: true,
             scaleControl: true,
             streetViewControl: false,
             overviewMapControl: false,
             rotateControl: false
         });
-        map_loaded = true;
-        getGisData(loadGisDataToContainers);
-        getmetafields(loadGisMetaFieldsToContainers);
+        map_loaded = true;  //Set Map is Loaded Variable
+        // Add controls to the map, allowing users to hide/show features.
+        map.setOptions({styles: styles['hide']});
+        var mapDataDefaultTimer = setInterval(function(){
+            /** Set Repeated Function Call to check if GIS Data is loaded **/
+            if(gis_data_stored == true){
+                clearInterval(mapDataDefaultTimer); // Clear the interval once data is loaded
+                data = filterGisDataByGroup(dataGroupSelect.val());
+                loadGisDataToMap(data);  // Load the data to map
+            }
+        });
     }
-    function loadGisDataToContainers(data){
-        data_cache = data;
-        loadGisDataToMap(data_cache);
-    }    
     function loadGisDataToMap(data){
+        /** Loads Provided data to Map and removes existing data **/
         if(curr_markers.length>0){
+            /** Clear Markers if any **/
             clearCurrentMarkers();
         }
         $.each(data, function(i,v){
+            /** Iterate through provided data and Load them to map
+             * Comptaible Format: Array of objects
+             * Object (Required Info): {latitude:"Value", longitude: "Value", id:"value", sample_identifier:"Value"}
+             * Mapping:
+             *     latitude: Marker's Latitude
+             *     longitude: Marker's Longitude
+             *     id: GIS Data unique id, shown above marker
+             *     sample_identifier: GIS Sample Indentifier, shown on hover
+            **/
             var coord = {lat: parseFloat(v.latitude) , lng: parseFloat(v.longitude) };
+            // Create new marker
             var marker = new google.maps.Marker({
                 position: coord,
                 map: map,
@@ -115,42 +181,74 @@
                 label: v.id
             });
             marker.addListener('click', function() {
-                showGisDetails(v.id);
+                /** Marker Click Event Listener **/
+                showGisDetails(v.id);   // Show GIS Details Marker Details
             });
-            curr_markers.push(marker);
+            curr_markers.push(marker);  // Add to current Markers Array
         });
     }
+
     function clearCurrentMarkers(){
+        /** Clear all Markers from the Map and empty the Current Markers Array**/
         if(curr_markers.length<=0)
-            return false;
-        for(var i=0; i<curr_markers.length; i++)
-            curr_markers[i].setMap(null);
-        curr_markers = [];
+            return false;   // return false if there are no markers
+        for(var i=0; i<curr_markers.length; i++)    //Iterate through complete Current Markers Array
+            curr_markers[i].setMap(null);   // Remove Marker from Map
+        curr_markers = [];  //Empty Current Markers Array
     }
-    function loadGisMetaFieldsToContainers(data){
+
+    function loadFilterKeys(){
+        /** Load Filter Keys to <select> from gisMetaFields Array **/
         var gisFilterParameterKey = $("#gisFilterParameterKey");
-        $.each(data, function(i,v){
-            gisFilterParameterKey.append('<option value="'+v.key_name+'">'+v.label+'</option>');
-        });
+        var loadFilterKeysTimer = setInterval(function(){
+            /** Set a repeated function call to check if meta fields array is loaded and then execute statements **/
+            if(gis_meta_fields_stored == true && gis_groups_stored == true){
+                clearInterval(loadFilterKeysTimer);
+                $(".gisDataGroupSelect").on("change", function(){
+                    var filteredFields = filterGisParametersByGroup($(this).val());
+                    gisFilterParameterKey.empty();
+                    $.each(filteredFields, function(i,v){
+                        /** Iterate through gisMetaFields Array and append new Option **/
+                        gisFilterParameterKey.append('<option value="'+v.key_name+'">'+v.label+'</option>');
+                    });
+                });
+
+            }
+        }, 200);
     }
+
     function showGisDetails(id){
-        var gisModal = $("#gisModal");
-        $.each(data_cache, function(i,v){
+        /** Show GIS Details based on ID in a Bootstrap Modals
+         *
+         * Iterates through gisData array to match ID and perform corrosponding statements
+         * Returns false if ID is not found
+         *
+         * **/
+        var gisModal = $("#gisModal");  //Select Modal Div
+        var isFound = false;
+        $.each(gisData, function(i,v){
             if(parseInt(v.id) == parseInt(id)){
-                gisModal.find(".modal-title").html(v.sample_identifier);
+                gisModal.find(".modal-title").html(v.sample_identifier);    //Set Modal Title
+                /** Dump raw data **/
                 var html = "Dumping Raw Data<br>";
                 $.each(v, function(index,value){
                     html += "<br>"+index+":"+value;
                 });
                 gisModal.find(".modal-body").html(html);
-                return false;
+                /** End Dump Raw Data **/
+                isFound = true; //set isFound flag
+                return false;   //End $.each loop
             }
         });
-        gisModal.modal();
+        if(isFound)
+            gisModal.modal();   //Show Modal
+        else
+            return false;   // Return false on ID NOT FOUND
     }
+
     $("#gisFilterSubmitBtn").click(function(e){
         e.preventDefault();
-        $this = $(this);    
+        $this = $(this);
         $(this).attr("disabled","disabled");
         var gisFilterParameterKey = $("#gisFilterParameterKey");
         var gisFilterParameterCondition = $("#gisFilterParameterCondition");
@@ -189,12 +287,37 @@
             });
         });
         loadGisDataToMap(filteredArray);
-        $("#gisDataTable").bootstrapTable("load",filteredArray);
-        setTimeout(function(){$this.removeAttr("disabled");},1500);
     });
-    get_curr_cord();
-    var api_checker = setInterval(function(){if(api_loaded){showMap();clearInterval(api_checker);}},500);
+    function generateTableColumns(){
+        meta_loaded = false;    //Status as not loaded
+        /**
+         * Generate Boostrap Table Columns
+         *
+        **/
+        /** Push Default Columns **/
+        var tableColumnTimer = setInterval(function(){
+            if(gis_meta_fields_stored == false || dataGroupSelect.attr("data-groups-loaded")=="undefined"
+        || dataGroupSelect.attr("data-groups-loaded")==undefined || dataGroupSelect.attr("data-groups-loaded")!="true")
+                return false;
+            clearInterval(tableColumnTimer);
+            columns = [];
+            columns.push({field: 'state', checkbox: true, align: 'center'});
+            columns.push({field: "id", title: "Id", editable: false});
+            var filteredFields = filterGisParametersByGroup(dataGroupSelect.val());
+            /** Add Columns from Database Array **/
+            $.each(filteredFields, function(i,v){
+                columns.push({field: v.key_name, title: v.label, sortable:true});
+            });
+            columns.push({field: 'action', title: 'Actions', align: 'center', formatter: actionFormatter});
+            /** Add Actions here **/
+            function actionFormatter(value, row, index){
+                html = '<a href="#" class="gisDataRemoveBtn"><i class="glyphicon glyphicon-remove"></i></a>';
+                return html;
+            }
+            meta_loaded = true;
+        }, 200);
+    }
+    init();     //Run Initial Tasks
 </script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD2DVlvcLu7o2m-6OhfbipppHEzRofJh48&callback=initMap"></script>
 {% include 'portal/partials/gistable.html' %}
 {% endblock %}

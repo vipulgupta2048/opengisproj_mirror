@@ -5,14 +5,41 @@
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'portal/css/bootstrap-table.min.css' %}" />
+    <style>
+        }
+        #gisImportTable{
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding-top: 20px;
+        }
+        #gisImportTable th{
+            font-weight: bold;
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        #gisImportTable tr{
+            margin: 5px;
+            padding: 8px;
+        }
+        #gisImportTable th:hover, tr:hover {
+            background-color: #f5f5f5;
+        }
+        #gisImportTable td{
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+        #submitImporterDataBtn {
+            margin: 10px;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Upload</button>
-  </form>
+    <button type="submit" class="btn btn-primary center-block">Upload</button>
+</form>
 
    <div class="row width-inherit">
         <h1 class="text-center">GIS Data Import</h1>
@@ -36,6 +63,7 @@
                 <h3 class="text-center loading-text">Data to be stored</h3>
                 <h4 class="text-center text-danger table-error"></h4>
                 <table id="gisImportTable"></table>
+                <button type="submit" class="btn btn-large btn-primay center-block" id="submitImporterDataBtn">Start Import</button>
             </div>
         </div>
     </div>
@@ -48,34 +76,29 @@
             var form = $("#addNewImportCheckForm");
             var apiURI = '/portal/ajax/';
             var submitBtn = $("#addNewCheckBtn");
-            var errorBox = form.find(".form-error");
             var tableError = $(".table-error");
-            var metaFields = [];
             var excelFields = [];
             var CheckGroup = $(".Check-group");
-            var is_excel_field_loaded = false, is_meta_field_loaded = false;
-            getmetafields(storeData);
-            importgisdata(excelField_generate);
-            key_name_generate();
+            var is_excel_field_loaded = false;
+            //getmetafields(storeData);
+            function init(){
+                importgisdata(excelField_generate);
+                key_name_generate();
+            }
             function excelField_generate(excel_data){
                 excelFields = excel_data;
                 is_excel_field_loaded = true;
             }
-
-            function storeData(data){
-                metaFields = data;
-                is_meta_field_loaded = true;
-            }
             function key_name_generate(){
                 var timer = setInterval(function(){
-                    if(is_excel_field_loaded == true && is_meta_field_loaded == true){
+                    if(is_excel_field_loaded == true && gis_meta_fields_stored == true){
                         clearInterval(timer);
-                        console.log(metaFields);
+                        console.log(gisMetaFields);
                         var html;
-                        for (var x in metaFields){
+                        for (var x in gisMetaFields){
                             console.log("I am fucking!!!");
-                            html = '<label for="key_name">'+metaFields[x].label+' (required)</label>';
-                            html += '<select class="form-control keyMapping" name="'+metaFields[x].key_name+'" id="'+metaFields[x].key_name+'" class="check_name" data-db-key="'+metaFields[x].key_name+'" required>';
+                            html = '<label for="key_name">'+gisMetaFields[x].label+' (required)</label>';
+                            html += '<select class="form-control keyMapping" name="'+gisMetaFields[x].key_name+'" id="'+gisMetaFields[x].key_name+'" class="check_name" data-db-key="'+gisMetaFields[x].key_name+'" required>';
                             for (var y in excelFields){
                                 html += '<option value="'+excelFields[y]+'">'+excelFields[y]+'</option>';
                             }
@@ -94,31 +117,35 @@
                     obj["excel_key"] = $(this).val();
                     mapping.push(obj);
                 });
-                excelData = getExcelDataFromMapping(mapping, readExcelData);
-                function init(){
-                getmetafields(displayMetaFields);   
-                setTimeout(function(){
-                    $("#gisImportTable").bootstrapTable({
-                        columns: metaFields,
-                        data: excelData,
-                        clickToSelect: true,
-                        pagination: true,
-                        pageSize: 10,
-                        search: true,
-                        showColumns: true,
-                        showToggle: true,
-                        singleSelect: true,
-                        idField: "id",
-                        uniqueId: "id",
-                    });
-                    $(".loading-text").hide();
-                    bindParamRemove();
-                },3000);
-            }
+                getExcelDataFromMapping(mapping, readExcelData);
             });
             function readExcelData(data){
                 console.log(data);
+                $.each(data.approved, function(i,v){
+                    var html = "<tr>";
+                    if (i==0){
+                        html += '<th class="col-sm-1">Sl. No.</th>';
+                    }
+                    else{
+                        html += '<td class="col-sm-1">'+i+'</td>';
+                    }
+                    $.each(v, function(key,value){
+                        if (i==0){
+                            html += '<th class="col-sm-2">'+key+'</th>';
+                        }
+                        else{
+                        html += '<td class="col-sm-2">'+value+'</td>';
+                        }
+                    });
+                    html += '</tr>';
+                    $("#gisImportTable").append(html);
+                });
+            //    $("#submitImporterDataBtn").fadeIn();
+                $("#submitImporterDataBtn").click(function(e){
+                    submitImporterData(data.approved);
+                });        
             }
+                init();
         });
     </script>
 {% endblock %}

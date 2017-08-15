@@ -1,13 +1,76 @@
+<style>
+.dropdown{
+  padding: 20px;
+  color:#777;
+}
+.dropdown:hover{
+  color: #333;
+}
+.navbar{
+	background-color: rgba(0,0,0,0);
+	z-index: 999;
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 1px 5px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.2);
+  height: 64px;
+  font-size: 18px;
+  margin-bottom: 2px;
+}
+.navbar-brand{
+  margin: 0!important;
+}
+.navbar a{
+  padding: 20px!important;
+  line-height: 25px!important;
+}
+.dropdown{
+  padding: 0;
+  margin: 0;
+}
+.dataDropdown-toggle{
+  height: 65px;
+  padding: 20px!important;
+  line-height: 25px!important;
+}
+.listHeader{
+  margin: 10px;
+}
+.listElement a{
+  padding: 10px!important;
+  margin: 0!important;
+}
+</style>
 <div class="navbar navbar-default">
     <div class="container-fluid">
-        <ul class="nav navbar-nav">
-            <li><a href="/portal">Home</a></li>
-            <li><a href="/portal/add">Add New GIS Data</a></li>
-            <li><a href="/portal/browse">Browse</a></li>
-            <li><a href="/portal/parameters">Parameters</a></li>
-            <li><a href="/portal/importView">Import View</a></li>
-            <li><a href="/portal/reports">Reports</a></li>
-            <li><a href="/account/logout/">Logout</a></li>
-        </ul>
+	    <div class="navbar-header">
+	        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#mainNav">
+    	        <span class="sr-only">Toggle navigation</span>
+	            <span class="icon-bar"></span>
+	            <span class="icon-bar"></span>
+	            <span class="icon-bar"></span>
+	        </button>
+            <a class="navbar-brand" href="/portal/">Open GIS Project</a>
+	    </div>
+        <div class="collapse navbar-collapse" id="mainNav">
+            <ul class="nav navbar-nav">
+                <li class="dropdown">
+                    <a href="#" id='dataDropdown-toggle' class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Data Tools<span class="caret"></span></a>
+                    <ul class="dropdown-menu padding-20-">
+                        <li class="listHeader"><strong>GIS Data</strong></li>
+                        <li class="listElement"><a href="/portal/add">Add Data</a></li>
+                        <li class="listElement"><a href="/portal/browse">Browse Table</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li class="listHeader"><strong>Import GIS Data</strong></li>
+                        <li class="listElement"><a href="/portal/importView">Import View</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li class="listHeader"><strong>GIS Parameters</strong></li>
+                        <li class="listElement"><a href="/portal/parameters">Add/Browse Parameters</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li class="listHeader"><strong>GIS Data Groups</strong></li>
+                        <li class="listElement"><a href="/portal/datagroups">Add/Browse Data Groups</a></li>
+                    </ul>
+                </li>
+                <li><a href="/portal/reports">Reports</a></li>
+                <li><a href="/account/logout/">Logout</a></li>
+            </ul>
+        </div>
     </div>
 </div>

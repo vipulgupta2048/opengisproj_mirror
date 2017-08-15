@@ -5,17 +5,95 @@
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'portal/css/bootstrap-table.min.css' %}" />
+    <style>
+    .sectionHeader{
+      text-align: center;
+      font-size: 50px;
+      margin-bottom: 25px;
+      margin-top: 25px;
+      color: #4d4d4d;
+      font-weight: 600;
+      width: 100%;
+      border-bottom: 10px solid;
+      border-image: linear-gradient(to right,green 20px, yellow 20px, yellow 40px, red 40px, red 60px, teal 60px, teal 80px) 5;
+      padding: 10px;
+      font-family: 'Dosis', sans-serif;
+    }
+    #background-image{
+      position: fixed;
+      background-image: url("../../static/portal/images/World.svg");
+      background-position: center;
+      background-repeat: no-repeat;
+      top: 0px;
+      z-index: -999;
+      width: 100%;
+      overflow: hidden;
+    }
+    #gisDataTable{
+      background-color: #fff;
+    }
+    @media all and (min-width: 768px){
+      #customParameterButton{
+        margin-right: 5px;
+        -ms-transform: translate(0, 45px); /* IE 9 */
+        -webkit-transform: translate(0, 45px); /* Safari */
+        transform: translate(0, 45px);
+        visibility: hidden;
+      }
+      #customAddButton{
+        -ms-transform: translate(171px, 79px); /* IE 9 */
+        -webkit-transform: translate(171px, 79px); /* Safari */
+        transform: translate(171px, 79px);
+        visibility: hidden;
+        }
+    }
+    #customParameterButton{
+      margin-right: 5px;
+    }
+    #mainContainer{transform: translate(0, -50px);}
+    .fixed-table-pagination{
+      background-color: white;
+
+    }
+    .fixed-table-container{
+      margin-bottom: 100px;
+    }
+    #dataGroupSection{
+      visibility: hidden;
+    }
+    #loading{
+      font-weight: 600;
+      font-size: 37px;
+    }
+    </style>
 {% endblock %}
 
 {% block content %}
-    <div class="row">
-        <h1 class="text-center">Browse</h1>
-        <h3 class="text-center loading-text">Loading Table</h3>
-        <div class="container">
-            <div class="alert text-center" id="gisDataTableError"></div>
-            <table id="gisDataTable"></table>
+    <div id="background-image"></div>
+      <div  class="container">
+        <h1 class="sectionHeader">Browse</h1>
+      </div>
+        <div id="dataGroupSection" class="form-group container">
+            <label>Select Data Group</label>
+            <select class="gisDataGroupSelect form-control"></select>
         </div>
-    </div>
+        <h3 id="loading" class="text-center loading-text">Loading Table...</h3>
+        <div id='mainContainer' class="container">
+          <a id="customAddButton" class="button btn btn-default" href="/portal/add">Add Data</button></a><br>
+          <a id="customParameterButton" href="/portal/parameters" class="btn btn-default button">Edit Table Parameters</a>
+          <table id="gisDataTable" data-is-editable = "true"></table>
+        </div>
+        <script>
+        var customAddButton = document.getElementById("customAddButton");//Variable used in displayBtns()
+        var customParameterButton = document.getElementById("customParameterButton");//Variable used in displayBtns()
+        var dataGroupSection = document.getElementById("dataGroupSection");//Variable used in displayBtns()
+        function displayBtns(){
+          customAddButton.style.visibility = "visible";
+          customParameterButton.style.visibility = "visible";
+          dataGroupSection.style.visibility = "visible";
+        }
+        document.getElementById("background-image").style.height = (screen.height*1.6)+('px');
+        </script>
 {% endblock %}
 
 {% block js %}
