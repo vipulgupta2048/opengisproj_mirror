@@ -69,7 +69,12 @@
         <div class="row">
             <div class="container">
                 <h3 class="text-center loading-text">Fetching Existing Fields</h3>
-                <h4 class="text-center text-danger table-error"></h4>
+                <div class="form-group container dataGroupSelectorContainer">
+                    <label>Select Data Group</label>
+                    <select class="dataGroupSelect form-control" id="gisParamTableGroupSelect">
+                        <option></option>
+                    </select>
+                </div>
                 <table id="gisParamTable"></table>
             </div>
         </div>
@@ -122,6 +127,11 @@
                             <input class="col-xs-1" type="checkbox" class="form-control" name="is_removable" id="is_removable" checked/>
                             <label class="col-xs-11" for="is_removable">Is Removable</label>
                         </div>
+                        <div class="form-group dataGroupSelectorContainer">
+                            <label>Select Data Group</label>
+                            <select class="dataGroupSelect form-control" id="gisAddParamGroupSelect" name="data_group" required data-show-all="false">
+                            </select>
+                        </div>
                         <button type="submit" class="btn btn-primary center-block" id="addNewParamBtn">Add Parameter</button>
                     </form>
                 </div>
@@ -139,97 +149,48 @@
             var apiURI = '/portal/ajax/';
             var submitBtn = $("#addNewParamBtn");
             var errorBox = form.find(".form-error");
-            var tableError = $(".table-error");
+            var paramGroupSelect = $('#gisParamTableGroupSelect');
+            var paramTable = $("#gisParamTable");
             var metaFields = [];
-            var metaColumns = [
-                {
-                    field: 'state',
-                    checkbox: true,
-                    align: 'center',
-                },
-                {
-                    field: "id",
-                    title: "Id",
-                },
-                {
-                    field: "key_name",
-                    title: "Identifier",
-                    sortable: true
-                },
-                {
-                    field: "label",
-                    title: "Label",
-                    sortable: true,
-                    editable: true,
-                },
-                {
-                    field: "key_type",
-                    title: "Type",
-                    sortable: true
-                },
-                {
-                    field: "min",
-                    title: "Min Value",
-                    sortable: true,
-                    editable: true
-                },
-                {
-                    field: "max",
-                    title: "Max Value",
-                    sortable: true,
-                    editable: true
-                },
-                {
-                    field: "max_len",
-                    title: "Max Length",
-                    sortable: true,
-                    editable: true
-                },
-                {
-                    field: "step",
-                    title: "Step",
-                    sortable: true,
-                    editable: true
-                },
-                {
-                    field: "required",
-                    title: "Required",
-                    sortable: true,
-                    editable: true
-                },
-                {
-                    field: 'action',
-                    title: 'Actions',
-                    align: 'center',
-                    formatter: actionFormatter
-                }
-            ]
+            var metaColumns = [{field: 'state', checkbox: true, align: 'center'},{field: "id", title: "Id" },
+                {field: "key_name", title: "Identifier", sortable: true }, {field: "label", title: "Label",
+                sortable: true},{field: "key_type", title: "Type", sortable: true},
+                {field: "min", title: "Min Value", sortable: true},{field: "max", title: "Max Value",
+                sortable: true},{field: "max_len", title: "Max Length", sortable: true},
+                {field: "step", title: "Step", sortable: true},{field: "required", title: "Required",
+                sortable: true },{field: "data_group", title: "Data Group",
+                sortable: true },{field: "is_removable", title: "Removable?",
+                sortable: false },{field: 'action', title: 'Actions', align: 'center', formatter: actionFormatter}];
             function actionFormatter(value, row, index){
                 html = '<a href="#" class="paramRemoveBtn"><i class="glyphicon glyphicon-remove"></i></a>';
                 return html;
             }
             function init(){
-                getmetafields(displayMetaFields);
-                setTimeout(function(){
-                    $("#gisParamTable").bootstrapTable({
-                        columns: metaColumns,
-                        data: metaFields,
-                        clickToSelect: true,
-                        pagination: true,
-                        pageSize: 10,
-                        search: true,
-                        showColumns: true,
-                        showToggle: true,
-                        singleSelect: true,
-                        idField: "id",
-                        uniqueId: "id",
-                    });
-                    $(".loading-text").hide();
-                    bindParamRemove();
-                },3000);
+                loadDataGroupSelector($(".dataGroupSelect"));
+                var tableTimer = setInterval(function(){
+                    if(gis_meta_fields_stored == true){
+                        clearInterval(tableTimer);
+                        paramTable.bootstrapTable({
+                            columns: metaColumns,
+                            data: gisMetaFields,
+                            clickToSelect: true,
+                            pagination: true,
+                            pageSize: 10,
+                            search: true,
+                            showColumns: true,
+                            showToggle: true,
+                            singleSelect: true,
+                            idField: "id",
+                            uniqueId: "id",
+                            onDblClickCell: editCellData,
+                        });
+                        $(".loading-text").hide();
+                        bindParamRemove();
+                    }
+                });
             }
             function bindParamRemove(){
-                $(".paramRemoveBtn").one("click", function(e){
+                $(".paramRemoveBtn").on("click", function(e){
                     e.preventDefault();
                     removeParam($(this).parents("tr"));
                 });
@@ -237,11 +198,12 @@
             function removeParam(row){
                 $(".paramRemoveBtn").off("click");
                 var id = row.attr("data-uniqueid");
-                var r = confirm("This will delete all data associated with parameter #"+id);
+                var group_id = getParameterGroupId(id);
+                var r = confirm("This will delete all data associated with parameter #"+id+" and Group #"+group_id);
                 if(r == true){
                     $.ajax({
                         url: apiURI + 'removeparam',
-                        data: "id="+id+"&csrfmiddlewaretoken="+'{{ csrf_token }}',
+                        data: "id="+id+"&data_group="+group_id+"&csrfmiddlewaretoken="+'{{ csrf_token }}',
                         dataType: "JSON",
                         method: "POST",
                         success: function(response){
@@ -258,6 +220,7 @@
                 function processResponse(r){
                     if(r.status == "success"){
                         $("#gisParamTable").bootstrapTable('removeByUniqueId',id);
+                        showNotification("Removed Successfully!","success");
                     }else{
                         if(r.status == "error"){
                             tableError.fadeOut();
@@ -268,115 +231,261 @@
                     bindParamRemove();
                 }
             }
-            function displayMetaFields(data){
-                metaFields = [];
-                $.each(data, function(i,v){
-                    metaFields.push(v);
+            function editCellData(field, value, row, element){
+                /** Converts the Data Table's <td> to <input> to allow data to be modified and store in database
+                 * Function accepts parameters according to onDblClickCell Event of Bootstrap Table
+                 * callback(field, value, row, $element)
+                 * field: the field name corresponding to the clicked cell,
+                 * value: the data value corresponding to the clicked cell,
+                 * row: the record corresponding to the clicked row,
+                 * $element: the td element.
+                **/
+
+                /**  Check if the element is already being edited **/
+                if(element.hasClass("edit-mode"))
+                    return false;   // Return false if is being edited
+
+                var key = field;
+                /** Ignore Default fields **/
+                if(key == "id" || key=="state" || key=="action")
+                    return false;
+                if(value == undefined)
+                    value = "";
+                var data_id = row["id"];
+                var field_attr = "";
+                var html = "";
+                element.addClass("edit-mode");  //Enter Edit Mode
+                showNotification("Edit Mode on "+data_id+":"+key, "info");  //Show Notification
+                /** Create a Input Ele  ment and Insert it into the <td> element **/
+                html += '<div class="form-group">';
+                var flag = 0;
+                form.find("input").each(function(e){
+                    if($(this).attr("name") == key){
+                        html += '<input type='+$(this).attr("type")+' class="form-control editGisParamInput"';
+                        if($(this).attr("required")!="undefined" && $(this).attr("required") == undefined){
+                            html += ' required';
+                        }
+                        if($(this).type="checkbox"){
+                            if(value=="True")
+                                html += " checked";
+                        }else{
+                            html += ' value="'+value+'"';
+                        }
+                        html += '>';
+                        flag = 1;
+                    }
                 });
-                $(document).trigger('triggerdisplaymetafields');
+                if(flag==0){
+                   form.find("select").each(function(e){
+                        if($(this).attr("name") == key){
+                            html += '<select class="form-control editGisParamInput"';
+                            if($(this).attr("required")!="undefined" && $(this).attr("required") != undefined){
+                                html += ' required';
+                            }
+                            html += '>';
+                            html += $(this).html().replace('value="'+value+'"','value="'+value+'" selected');
+                            html += "</select>";
+                            flag = 1;
+                        }
+                    });
+                }
+                html += '<br><i class="glyphicon glyphicon-remove pull-right icon-btn closeEditGisParamBtn"></i><i class="glyphicon'+
+                    ' glyphicon-ok submitEditGisParamBtn pull-right icon-btn"></i></div>';
+                element.html(html);
+
+                var gisParamInput = element.find(".editGisParamInput");   // Select the newly created Input Element
+                /** Bind keydown handler to new element **/
+                gisParamInput.on("keydown", function(e){
+                    $this = $(this);
+                    /** Submit the new data on "Enter" **/
+                    if(e.keyCode==13){
+                        e.preventDefault();
+                        processEditGisParamInput($this, key, data_id);
+                    }
+                });
+                /** Bind Click Handler to newly created Submit Button **/
+                element.find(".submitEditGisParamBtn").on("click", function(){
+                    processEditGisParamInput(gisParamInput, key, data_id);    // Process the Input
+                });
+                /** Bind Click Handler to New Created Close Button **/
+                element.find(".closeEditGisParamBtn").on("click",function(){
+                    element.html(value);    //Restore Previous Value
+                    element.removeClass("edit-mode");   // Exit Edit Mode
+                    showNotification("Cancelled!","error");
+                });
             }
-            form.find("input").on("change", function(e){
+            function processEditGisParamInput(field, key, param_id){
+            /** Validate and Submit Data entered in Edit Data Mode **/
+                if(validateField(field)){
+                    var parent = field.parents("td.edit-mode"); //Select parent <td>
+                    var parentRow = parent.parents("tr");   //Select parent <tr>
+                    field.off("keydown");   //Disable Keydown handler
+                    field.attr("disabled","disabled");  //Disable Input
+                    var submitEditGisDataBtn = field.parents("td").find(".submitEditGisParamBtn");
+                    //Change Icon and Remove Click Handler from the Edit Cell Submit Button
+                    submitEditGisDataBtn.removeClass("glyphicon-ok").addClass("glyphicon-refresh").off("click");
+                    var value = field.val();    //Store Input Value
+                    /** Create data to be sent to server **/
+                    if(key=="required" || key=="is_removable"){
+                        if(field[0].checked)
+                            value = "True";
+                        else
+                            value = "False"
+                    }
+
+                    var data = "key="+key+"&paramId="+param_id+"&value="+value+"&csrfmiddlewaretoken={{ csrf_token }}";
+                    $.ajax({
+                        url: apiURI+"editparam",
+                        type: "POST",
+                        data: data,
+                        dataType: "JSON",
+                        success: function(response){
+                            r = response;
+                            processResponse(r);
+                        }
+                    });
+                    function processResponse(r){
+                        if(r.status == "success"){
+                            parent.removeClass("edit-mode");  //Exit Edit Mode
+                            parent.html(value);   // Update Value
+                            var parentRowIndex = gisTable.find("tr").index(parentRow)-1;
+                            /** Update Table Cell **/
+                            paramTable.bootstrapTable('updateCell',{index:parentRowIndex, field:key, value:value, reinit:false});
+                            showNotification('Successfully Updated '+data_id+":"+key, 'success');    //Notify The user
+                        }else{
+                            if(r.status == "error"){
+                                field.tooltip({title:r.msg, trigger: "manual", placement:"auto bottom"});
+                                field.tooltip("show");
+                                /** Rebind All **/
+                                submitEditGisDataBtn.on("click", function(){processEditGisDataInput(field,key,data_id);})
+                                field.removeAttr("disabled");
+                                field.on("keydown", function(e){
+                                    if(e.keyCode == 13){
+                                        e.preventDefault();
+                                        processEditGisDataInput($(this), key, data_id);
+                                    }
+                                });
+                                submitEditGisDataBtn.removeClass("glyphicon-refresh").addClass("glyphicon-ok");
+                                showNotification("Error Occured "+data_id+":"+key, "error");
+                            }
+                        }
+                    }
+                }
+            }
+            form.find("input, select").on("change", function(e){
                 validateField($(this));
             });
+
             $("#key_type").change(function(e){
                 if($(this).val()=="number"){
-                    $("#key_max, #key_min, #key_step").parent("div").show();
-                    $("#key_max_len").parent("div").hide();
+                    $("#key_max, #key_min, #key_step").parent("div").removeClass("hidden");
+                    $("#key_max_len").parent("div").addClass('hidden');
                 }
                 if($(this).val()=="text"){
-                    $("#key_max_len").parent("div").show();
-                    $("#key_max, #key_min, #key_step").parent("div").hide();
+                    $("#key_max_len").parent("div").removeClass("hidden");
+                    $("#key_max, #key_min, #key_step").parent("div").addClass("hidden");
                 }
             });
+
             function validateForm(){
                 var toReturn = false;
-                form.find("input").each(function(e){
+                form.find("input, select").each(function(e){
+                    console.log($(this));
+                    if($(this).parent("div").hasClass("hidden")){
+                        toReturn = true;
+                        return false;
+                    }
                     toReturn = validateField($(this));
                     if(!toReturn)
                         return false;
                 });
                 return toReturn;
             }
-            function validateField(field){
-                var val = field.val();
-                var len = val.length;
-                console.log(field.attr("required"));
-                if(field.attr("required")!="undefined" && field.attr("required")!=undefined){
-                    if(len==0){
-                        field.tooltip({title:"This Field is required!", trigger:"manual", placement:"auto bottom"});
-                        field.tooltip('show');
-                        field.parent("div.form-group").removeClass("has-success").addClass("has-error");
-                        return false;
-                    }
-                }
-                if(field.attr("min")!="undefined"){
-                    if(field.attr("type")=="text"){
-                        if(len<parseInt(field.attr("min"))){
-                            field.tooltip({title:"Enter Atleast "+field.attr("min")+" characters", trigger:"manual", placement:"auto bottom"});
-                            field.tooltip("show");
-                            field.parent("div.form-group").removeClass("has-success").addClass("has-error");
-                            toReturn = false;
-                            return false
-                        }
-                    }else{
-                        val = field.val();
-                        min = field.attr("min");
-                        if(field.attr("type")=="number"){
-                            val = parseFloat(field.val());
-                            min = parseFloat(field.attr("min"));
-                        }
-                        if(val<min){
-                            field.tooltip({title:"Min allowed value is "+field.attr("min"), trigger: "manual", placement:"auto bottom"});
-                            field.tooltip("show");
-                            field.parent("div.form-group").removeClass("has-success").addClass("has-error");
-                            toReturn = false;
-                            return false;
-                        }
-                    }
-
-                }
-                if(field.attr("max")!="undefined"){
-                    if(field.attr("type")=="text"){
-                        if(len>parseInt(field.attr("max"))){
-                            field.tooltip({title:"Max "+field.attr("max")+" characters allowed!", trigger: "manual", placement:"auto bottom"});
-                            field.tooltip("show");
-                            field.parent("div.form-group").removeClass("has-success").addClass("has-error");
-                            toReturn = false;
-                            return false;
-                        }
-                    }else{
-                        val = field.val();
-                        max = field.attr("max");
-                        if(field.attr("type")=="number"){
-                            val = parseFloat(field.val());
-                            max = parseFloat(field.attr("max"));
-                            console.log("    This is a number field");
-                        }
-                        console.log(val)
-                        if(val>max){
-                            field.tooltip({title:"Max allowed value is "+field.attr("max"), trigger: "manual", placement:"auto bottom"});
-                            field.tooltip("show");
-                            field.parent("div.form-group").removeClass("has-success").addClass("has-error");
-                            toReturn = false;
-                            return false;
-                        }
-                    }
-                }
-                if(field.attr("max-len")!="undefined"){
-                    val = field.val();
-                    max_len = parseInt(field.attr("max-len"));
-                    if(val.length>max_len){
-                        field.tooltip({title:"Max "+field.attr("max-len")+' characters allowed', trigger: "manual", placement:"auto bottom"});
-                        field.tooltip("show");
-                        field.parent("div.form-group").removeClass("has-success").addClass("has-error");
-                        toReturn = false;
-                        return false;
-                    }
-                }
-                field.tooltip("hide");
-                field.parent("div.form-group").removeClass("has-error").addClass("has-success");
-                return true;
-            }
+            // function validateField(field){
+            //     var val = field.val();
+            //     var len = val.length;
+            //     console.log(field.attr("required"));
+            //     if(field.attr("required")!="undefined" && field.attr("required")!=undefined){
+            //         if(len==0){
+            //             field.tooltip({title:"This Field is required!", trigger:"manual", placement:"auto bottom"});
+            //             field.tooltip('show');
+            //             field.parent("div.form-group").removeClass("has-success").addClass("has-error");
+            //             return false;
+            //         }
+            //     }
+            //     if(field.attr("min")!="undefined"){
+            //         if(field.attr("type")=="text"){
+            //             if(len<parseInt(field.attr("min"))){
+            //                 field.tooltip({title:"Enter Atleast "+field.attr("min")+" characters", trigger:"manual", placement:"auto bottom"});
+            //                 field.tooltip("show");
+            //                 field.parent("div.form-group").removeClass("has-success").addClass("has-error");
+            //                 toReturn = false;
+            //                 return false
+            //             }
+            //         }else{
+            //             val = field.val();
+            //             min = field.attr("min");
+            //             if(field.attr("type")=="number"){
+            //                 val = parseFloat(field.val());
+            //                 min = parseFloat(field.attr("min"));
+            //             }
+            //             if(val<min){
+            //                 field.tooltip({title:"Min allowed value is "+field.attr("min"), trigger: "manual", placement:"auto bottom"});
+            //                 field.tooltip("show");
+            //                 field.parent("div.form-group").removeClass("has-success").addClass("has-error");
+            //                 toReturn = false;
+            //                 return false;
+            //             }
+            //         }
+            //
+            //     }
+            //     if(field.attr("max")!="undefined"){
+            //         if(field.attr("type")=="text"){
+            //             if(len>parseInt(field.attr("max"))){
+            //                 field.tooltip({title:"Max "+field.attr("max")+" characters allowed!", trigger: "manual", placement:"auto bottom"});
+            //                 field.tooltip("show");
+            //                 field.parent("div.form-group").removeClass("has-success").addClass("has-error");
+            //                 toReturn = false;
+            //                 return false;
+            //             }
+            //         }else{
+            //             val = field.val();
+            //             max = field.attr("max");
+            //             if(field.attr("type")=="number"){
+            //                 val = parseFloat(field.val());
+            //                 max = parseFloat(field.attr("max"));
+            //                 console.log("    This is a number field");
+            //             }
+            //             console.log(val)
+            //             if(val>max){
+            //                 field.tooltip({title:"Max allowed value is "+field.attr("max"), trigger: "manual", placement:"auto bottom"});
+            //                 field.tooltip("show");
+            //                 field.parent("div.form-group").removeClass("has-success").addClass("has-error");
+            //                 toReturn = false;
+            //                 return false;
+            //             }
+            //         }
+            //     }
+            //     if(field.attr("max-len")!="undefined"){
+            //         val = field.val();
+            //         max_len = parseInt(field.attr("max-len"));
+            //         if(val.length>max_len){
+            //             field.tooltip({title:"Max "+field.attr("max-len")+' characters allowed', trigger: "manual", placement:"auto bottom"});
+            //             field.tooltip("show");
+            //             field.parent("div.form-group").removeClass("has-success").addClass("has-error");
+            //             toReturn = false;
+            //             return false;
+            //         }
+            //     }
+            //     field.tooltip("hide");
+            //     field.parent("div.form-group").removeClass("has-error").addClass("has-success");
+            //     return true;
+            // }
+            paramGroupSelect.change(function(e){
+                var filtered_data = filterGisParametersByGroup($(this).val());
+                paramTable.bootstrapTable('load',filtered_data);
+                bindParamRemove();
+            });
             form.submit(function(e){
                 e.preventDefault();
                 if(!validateForm()){
@@ -397,18 +506,23 @@
                         processResponse(r);
                     },
                     error: function(response){
-                        console.log("Error");
+                        console.log("Error");0
                         console.log(response);
                     }
                 });
                 function processResponse(r){
                     if(r.status=="success"){
                         submitBtn.html("Success");
-                        getmetafields(displayMetaFields);
-                        $(document).one('triggerdisplaymetafields', function(){
-                            $("#gisParamTable").bootstrapTable('load',metaFields);
-                            bindParamRemove();
-                        });
+                        getMetaFields(storeMetaFields);
+                        var metaFieldTimer = setInterval(function(){
+                            if(gis_meta_fields_stored == true){
+                                clearInterval(metaFieldTimer);
+                                var filteredFields = filterGisParametersByGroup(paramGroupSelect.val());
+                                paramTable.bootstrapTable('load',filteredFields);
+                                bindParamRemove();
+                                showNotification("Added Successfully!","success");
+                            }
+                        },200);
                         setTimeout(function(){resetForm();}, 1000);
                     }else{
                         if(r.status=="error"){
@@ -420,7 +534,7 @@
                                 field.tooltip("show");
                                 field.parent("div").removeClass("has-success").addClass("has-error");
                                 field.focus();
-
+                                showNotification("Error", "error");
                             }
                             setTimeout(function(){submitBtn.html("Add");},2000);
                         }
@@ -430,6 +544,8 @@
             function resetForm(){
                 form[0].reset();
                 submitBtn.html("Add");
+                form.find(".has-success").removeClass(".has-success");
+                form.find(".has-error").removeClass(".has-error");
             }
             init();
         });

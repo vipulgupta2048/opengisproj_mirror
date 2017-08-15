@@ -1,0 +1,325 @@
+{% extends 'portal/base.html' %}
+{% load static %}
+{% block title %}Data Groups{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'portal/css/bootstrap-table.min.css' %}" />
+{% endblock %}
+
+{% block content %}
+    <div class="row width-inherit">
+        <h1 class="text-center">GIS Data Groups</h1>
+        <div class="row">
+            <div class="container">
+                <h3 class="text-center loading-text">Fetching Existing Groups</h3>
+                <table id="gisDataGroupTable"></table>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <h3 class="text-center">Add New GIS Data Groups</h3>
+            </div>
+            <div class="container">
+                <div class="col-xs-12">
+                    <form id="addNewGroupForm">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="group_name">Group Name(required)</label>
+                            <input type="text" class="form-control" name="group_name" id="group_name" required/>
+                        </div>
+                        <button type="submit" class="btn btn-primary center-block" id="addNewDataGroupBtn">Add New Group</button>
+                    </form> 
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'portal/js/bootstrap-table.min.js' %}"></script>
+    <script>
+        $(document).ready(function(e){
+            var form = $("#addNewGroupForm");
+            var apiURI = '/portal/ajax/';
+            var submitBtn = $("#addNewDataGroupBtn");
+            var dataGroupTable = $("#gisDataGroupTable");
+            var metaFields = [];
+            var metaColumns = [{field: 'state', checkbox: true, align: 'center'},{field: "id", title: "Id" },
+                {field: "name", title: "Group Name", sortable: true },{field: "is_removable", title: "Removable?",
+                sortable: false },{field: 'action', title: 'Actions', align: 'center', formatter: actionFormatter}];
+            function actionFormatter(value, row, index){
+                html = '<a href="#" class="dataGroupRemoveBtn"><i class="glyphicon glyphicon-remove"></i></a>';
+                return html;
+            }
+            function init(){
+                var tableTimer = setInterval(function(){
+                    if(gis_groups_stored == true){
+                        clearInterval(tableTimer);
+                        dataGroupTable.bootstrapTable({
+                            columns: metaColumns,
+                            data: gisGroups,
+                            clickToSelect: true,
+                            pagination: true,
+                            pageSize: 10,
+                            search: true,
+                            showColumns: true,
+                            showToggle: true,
+                            singleSelect: true,
+                            idField: "id",
+                            uniqueId: "id",
+                            onDblClickCell: editCellData,
+                        });
+                        $(".loading-text").hide();
+                        bindDataGroupRemove();
+                    }
+                },200);
+            }
+            function bindDataGroupRemove(){
+                $(".dataGroupRemoveBtn").on("click", function(e){
+                    e.preventDefault();
+                    removeGroup($(this).parents("tr"));
+                });
+            }
+            function removeGroup(row){
+                $(".dataGroupRemoveBtn").off("click");
+                var id = row.attr("data-uniqueid");
+                var r = confirm("This will delete all data associated with Group #"+id);
+                if(r == true){
+                    $.ajax({
+                        url: apiURI + 'removedatagroup',
+                        data: "group_id="+id+"&csrfmiddlewaretoken="+'{{ csrf_token }}',
+                        dataType: "JSON",
+                        method: "POST",
+                        success: function(response){
+                            r = response;
+                            processResponse(r);
+                        },
+                        error: function(response){
+                            console.log(response);
+                        }
+                    });
+                }else{
+                    bindDataGroupRemove();
+                }
+                function processResponse(r){
+                    if(r.status == "success"){
+                        dataGroupTable.bootstrapTable('removeByUniqueId',id);
+                        showNotification("Removed Successfully!","success");
+                    }else{
+                        if(r.status == "error"){
+                            showNotification("Unable to Delete due to "+r.msg,"error");
+                        }   
+                    }
+                    bindDataGroupRemove();
+                }
+            }
+            function editCellData(field, value, row, element){
+                /** Converts the Data Table's <td> to <input> to allow data to be modified and store in database 
+                 * Function accepts dataGroupeters according to onDblClickCell Event of Bootstrap Table
+                 * callback(field, value, row, $element)
+                 * field: the field name corresponding to the clicked cell, 
+                 * value: the data value corresponding to the clicked cell, 
+                 * row: the record corresponding to the clicked row, 
+                 * $element: the td element.
+                **/
+
+                /**  Check if the element is already being edited **/
+                if(element.hasClass("edit-mode"))
+                    return false;   // Return false if is being edited
+                
+                var key = field;
+                /** Ignore Default fields **/
+                if(key == "id" || key=="state" || key=="action")
+                    return false;
+                if(value == undefined)
+                    value = "";
+                var data_id = row["id"];
+                var field_attr = "";
+                var html = "";
+                element.addClass("edit-mode");  //Enter Edit Mode
+                showNotification("Edit Mode on "+data_id+":"+key, "info");  //Show Notification
+                /** Create a Input Ele  ment and Insert it into the <td> element **/
+                html += '<div class="form-group">';
+                var flag = 0;
+                if(key == "is_removable"){
+                    html += '<input type="checkbox"';
+                    if(field[0].checked)
+                        html+= ' checked';
+                    html += ' required ';
+                }
+                else
+                    html += '<input type="text"';
+                html+= ' class="form-control editDataGroupInput">';
+                html += '<br><i class="glyphicon glyphicon-remove pull-right icon-btn closeEditDataGroupBtn"></i><i class="glyphicon'+
+                    ' glyphicon-ok submitEditDataGroupBtn pull-right icon-btn"></i></div>';
+                element.html(html);
+                
+                var dataGroupInput = element.find(".editDataGroupInput");   // Select the newly created Input Element
+                /** Bind keydown handler to new element **/
+                dataGroupInput.on("keydown", function(e){
+                    $this = $(this);
+                    /** Submit the new data on "Enter" **/
+                    if(e.keyCode==13){
+                        e.preventDefault();
+                        processEditDataGroupInput($this, key, data_id);
+                    }
+                });
+                /** Bind Click Handler to newly created Submit Button **/
+                element.find(".submitEditDataGroupBtn").on("click", function(){
+                    processEditDataGroupInput(dataGroupInput, key, data_id);    // Process the Input
+                });
+                /** Bind Click Handler to New Created Close Button **/
+                element.find(".closeEditDataGroupBtn").on("click",function(){
+                    element.html(value);    //Restore Previous Value
+                    element.removeClass("edit-mode");   // Exit Edit Mode
+                    showNotification("Cancelled!","error");
+                });
+            }
+            function processEditDataGroupInput(field, key, dataGroup_id){
+                console.log(field);
+            /** Validate and Submit Data entered in Edit Data Mode **/
+                if(validateField(field)){
+                    var parent = field.parents("td.edit-mode"); //Select parent <td>
+                    var parentRow = parent.parents("tr");   //Select parent <tr>
+                    field.off("keydown");   //Disable Keydown handler
+                    field.attr("disabled","disabled");  //Disable Input
+                    var submitEditDataGroupBtn = field.parents("td").find(".submitEditDataGroupBtn");
+                    //Change Icon and Remove Click Handler from the Edit Cell Submit Button
+                    submitEditDataGroupBtn.removeClass("glyphicon-ok").addClass("glyphicon-refresh").off("click");    
+                    var value = field.val();    //Store Input Value
+                    /** Create data to be sent to server **/
+                    if(key=="is_removable"){
+                        if(field[0].checked)
+                            value = "True";
+                        else
+                            value = "False"
+                    }
+                        
+                    var data = "key="+key+"&group_id="+dataGroup_id+"&value="+value+"&csrfmiddlewaretoken={{ csrf_token }}";
+                    $.ajax({
+                        url: apiURI+"editdatagroup",
+                        type: "POST",
+                        data: data,
+                        dataType: "JSON",
+                        success: function(response){
+                            r = response;
+                            processResponse(r);
+                        }
+                    });
+                    function processResponse(r){
+                        if(r.status == "success"){
+                            parent.removeClass("edit-mode");  //Exit Edit Mode
+                            parent.html(value);   // Update Value
+                            var parentRowIndex = gisTable.find("tr").index(parentRow)-1;
+                            /** Update Table Cell **/
+                            dataGroupTable.bootstrapTable('updateCell',{index:parentRowIndex, field:key, value:value, reinit:false});
+                            showNotification('Successfully Updated '+data_id+":"+key, 'success');    //Notify The user
+                        }else{
+                            if(r.status == "error"){
+                                field.tooltip({title:r.msg, trigger: "manual", placement:"auto bottom"});
+                                field.tooltip("show");
+                                /** Rebind All **/
+                                submitEditGisDataBtn.on("click", function(){processEditDataGroupInput(field,key,data_id);})
+                                field.removeAttr("disabled");
+                                field.on("keydown", function(e){
+                                    if(e.keyCode == 13){
+                                        e.preventDefault();
+                                        processEditDataGroupInput($(this), key, data_id);
+                                    }
+                                });
+                                submitEditDataGroupBtn.removeClass("glyphicon-refresh").addClass("glyphicon-ok");
+                                showNotification("Error Occured "+data_id+":"+key, "error");
+                            }
+                        }
+                    }
+                }
+            }
+            form.find("input").on("change", function(e){
+                validateField($(this));
+            });
+
+            $("#key_type").change(function(e){
+                if($(this).val()=="number"){
+                    $("#key_max, #key_min, #key_step").parent("div").removeClass("hidden");
+                    $("#key_max_len").parent("div").addClass('hidden');
+                }
+                if($(this).val()=="text"){
+                    $("#key_max_len").parent("div").removeClass("hidden");
+                    $("#key_max, #key_min, #key_step").parent("div").addClass("hidden");
+                }
+            });
+
+            function validateForm(){
+                var toReturn = false;
+                form.find("input").each(function(e){
+                    if($(this).parent("div").hasClass("hidden")){
+                        toReturn = true;
+                        return false;
+                    }
+                    toReturn = validateField($(this));
+                    if(!toReturn)
+                        return false;
+                });
+                return toReturn;
+            }
+            form.submit(function(e){
+                e.preventDefault();
+                if(!validateForm()){
+                    showNotification("Please correct the errors!","error");
+                    return false;
+                }
+                var data = form.serialize();
+                submitBtn.html("Processing");
+                $.ajax({
+                    url: apiURI + "addnewdatagroup",
+                    type: "POST",
+                    data: data,
+                    dataType: "JSON",
+                    success: function(response){
+                        r = response;
+                        processResponse(r);
+                    },
+                    error: function(response){
+                        console.log("Error");0
+                        console.log(response);
+                    }
+                });
+                function processResponse(r){
+                    if(r.status=="success"){
+                        submitBtn.html("Success");
+                        getGisGroups(storeGisGroups);
+                        var timer = setInterval(function(){
+                            if(gis_groups_stored == true){
+                                clearInterval(timer);
+                                dataGroupTable.bootstrapTable('load',gisGroups);
+                                bindParamRemove();
+                                showNotification("Added Successfully!","success");
+                            }
+                        },200);
+                        setTimeout(function(){resetForm();}, 1000);
+                    }else{
+                        if(r.status=="error"){
+                            submitBtn.html("Error");
+                            showNotification("Error: "+r.message, "error");
+                            if(r.errcode=="GROUP_EXISTS"){
+                                field = $("#key_name");
+                                field.tooltip({title:"This Group already exist", trigger: "manual", placement:"auto bottom"});
+                                field.tooltip("show");
+                                field.parent("div").removeClass("has-success").addClass("has-error");
+                                field.focus();
+                            }
+                            setTimeout(function(){submitBtn.html("Add");},2000);
+                        }
+                    }
+                }
+            });
+            function resetForm(){
+                form[0].reset();
+                submitBtn.html("Add New Group");
+                form.find(".has-success").removeClass(".has-success");
+                form.find(".has-error").removeClass(".has-error");
+            }
+            init();
+        });
+    </script>
+{% endblock %}

@@ -61,14 +61,20 @@
 {% endblock %}
 
 {% block content %}
-  <div id="background-image"></div>
-        <div  class="container">
-              <h1 class="sectionHeader">Database</h1>
-              <div class="alert text-center" id="gisDataTableError"></div>
-              <a id="customAddButton" class="button btn btn-default" href="/portal/add">Add Data</button></a><br>
-              <a id="customParameterButton" href="/portal/parameters" class="btn btn-default button">Edit Table Parameters</a>
-              <h3 class="text-center loading-text">Loading Table</h3>
-            <table id="gisDataTable"></table>
+    <div id="background-image"></div>
+    <div class="row">
+      <div  class="container">
+        <h1 class="sectionHeader">Browse</h1>
+      </div>
+        <div class="form-group container">
+            <label>Select Data Group</label>
+            <select class="gisDataGroupSelect form-control"></select>
+        </div>
+        <h3 class="text-center loading-text">Loading Table</h3>
+        <div class="container">
+          <a id="customAddButton" class="button btn btn-default" href="/portal/add">Add Data</button></a><br>
+          <a id="customParameterButton" href="/portal/parameters" class="btn btn-default button">Edit Table Parameters</a>
+          <table id="gisDataTable" data-is-editable = "true"></table>
         </div>
 {% endblock %}
 

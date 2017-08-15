@@ -4,7 +4,9 @@
 .no-padding{
     padding:0!important;
 }
-
+.padding-20-p{
+    padding: 20%;
+}
 .width-inherit{
     width:inherit;
 }
