@@ -57,17 +57,22 @@
         .fixed-table-container{
           margin-bottom: 100px;
         }
+        .dataGroupSelectorContainer{
+          margin: 0;
+          padding: 0;
+          padding-right: 30px;
+        }
     </style>
 {% endblock %}
 
 {% block content %}
     <div id="background-image"></div>
-    <div class="row width-inherit">
-        <div class="container">
+    <div class="container">
+        <div class="row">
           <h1 class="sectionHeader">GIS Parameters</h1>
         </div>
         <div class="row">
-            <div class="container">
+            <div class="col-xs-12">
                 <h3 class="text-center loading-text">Fetching Existing Fields</h3>
                 <div class="form-group container dataGroupSelectorContainer">
                     <label>Select Data Group</label>

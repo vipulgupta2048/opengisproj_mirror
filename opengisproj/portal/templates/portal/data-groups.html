@@ -4,11 +4,54 @@
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'portal/css/bootstrap-table.min.css' %}" />
+    <style>
+    .container-fluid{
+      margin: 0;
+      padding: 0;
+    }
+    .sectionHeader{
+      text-align: center;
+      font-size: 50px;
+      margin-bottom: 25px;
+      margin-top: 25px;
+      color: #4d4d4d;
+      font-weight: 600;
+      width: 100%;
+      border-bottom: 10px solid;
+      border-image: linear-gradient(to right,green 20px, yellow 20px, yellow 40px, red 40px, red 60px, teal 60px, teal 80px) 5;
+      padding: 10px;
+      font-family: 'Dosis', sans-serif;
+    }
+    #background-image{
+      position: fixed;
+      background-image: url("../../static/portal/images/World.svg");
+      background-position: center;
+      background-repeat: no-repeat;
+      top: 0px;
+      z-index: -999;
+      width: 100%;
+      overflow: hidden;
+    }
+    #gisDataGroupTable{
+      background-color: #fff;
+    }
+    .fixed-table-pagination{
+      background-color: white;
+
+    }
+    .fixed-table-container{
+      margin-bottom: 100px;
+    }
+    #addNewDataGroupBtn{
+      margin-bottom: 50px;
+    }
+    </style>
 {% endblock %}
 
 {% block content %}
-    <div class="row width-inherit">
-        <h1 class="text-center">GIS Data Groups</h1>
+<div id="background-image"></div>
+    <div class="container">
+        <h1 class="sectionHeader">GIS Data Groups</h1>
         <div class="row">
             <div class="container">
                 <h3 class="text-center loading-text">Fetching Existing Groups</h3>
@@ -17,7 +60,7 @@
         </div>
         <div class="row">
             <div class="col-xs-12">
-                <h3 class="text-center">Add New GIS Data Groups</h3>
+                <h3 class="sectionHeader">Add GIS Data Groups</h3>
             </div>
             <div class="container">
                 <div class="col-xs-12">
@@ -27,8 +70,8 @@
                             <label for="group_name">Group Name(required)</label>
                             <input type="text" class="form-control" name="group_name" id="group_name" required/>
                         </div>
-                        <button type="submit" class="btn btn-primary center-block" id="addNewDataGroupBtn">Add New Group</button>
-                    </form> 
+                        <button type="submit" class="btn btn-primary center-block" id="addNewDataGroupBtn">Add Group</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -108,25 +151,25 @@
                     }else{
                         if(r.status == "error"){
                             showNotification("Unable to Delete due to "+r.msg,"error");
-                        }   
+                        }
                     }
                     bindDataGroupRemove();
                 }
             }
             function editCellData(field, value, row, element){
-                /** Converts the Data Table's <td> to <input> to allow data to be modified and store in database 
+                /** Converts the Data Table's <td> to <input> to allow data to be modified and store in database
                  * Function accepts dataGroupeters according to onDblClickCell Event of Bootstrap Table
                  * callback(field, value, row, $element)
-                 * field: the field name corresponding to the clicked cell, 
-                 * value: the data value corresponding to the clicked cell, 
-                 * row: the record corresponding to the clicked row, 
+                 * field: the field name corresponding to the clicked cell,
+                 * value: the data value corresponding to the clicked cell,
+                 * row: the record corresponding to the clicked row,
                  * $element: the td element.
                 **/
 
                 /**  Check if the element is already being edited **/
                 if(element.hasClass("edit-mode"))
                     return false;   // Return false if is being edited
-                
+
                 var key = field;
                 /** Ignore Default fields **/
                 if(key == "id" || key=="state" || key=="action")
@@ -153,7 +196,7 @@
                 html += '<br><i class="glyphicon glyphicon-remove pull-right icon-btn closeEditDataGroupBtn"></i><i class="glyphicon'+
                     ' glyphicon-ok submitEditDataGroupBtn pull-right icon-btn"></i></div>';
                 element.html(html);
-                
+
                 var dataGroupInput = element.find(".editDataGroupInput");   // Select the newly created Input Element
                 /** Bind keydown handler to new element **/
                 dataGroupInput.on("keydown", function(e){
@@ -185,7 +228,7 @@
                     field.attr("disabled","disabled");  //Disable Input
                     var submitEditDataGroupBtn = field.parents("td").find(".submitEditDataGroupBtn");
                     //Change Icon and Remove Click Handler from the Edit Cell Submit Button
-                    submitEditDataGroupBtn.removeClass("glyphicon-ok").addClass("glyphicon-refresh").off("click");    
+                    submitEditDataGroupBtn.removeClass("glyphicon-ok").addClass("glyphicon-refresh").off("click");
                     var value = field.val();    //Store Input Value
                     /** Create data to be sent to server **/
                     if(key=="is_removable"){
@@ -194,7 +237,7 @@
                         else
                             value = "False"
                     }
-                        
+
                     var data = "key="+key+"&group_id="+dataGroup_id+"&value="+value+"&csrfmiddlewaretoken={{ csrf_token }}";
                     $.ajax({
                         url: apiURI+"editdatagroup",
@@ -321,5 +364,6 @@
             }
             init();
         });
+        document.getElementById("background-image").style.height = (screen.height*1.6)+('px');
     </script>
 {% endblock %}

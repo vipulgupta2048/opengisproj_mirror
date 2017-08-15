@@ -3,11 +3,18 @@
 {% block title %}Login | GIS{% endblock %}
     {% block head %}
         <link rel="stylesheet" href="{% static 'accounts/login.css' %}">
+        <style>
+        body{
+          overflow: hidden;
+        }
+        .login-panel{
+          position: absolute;
+        }
+        </style>
     {% endblock %}
 {% block body %}
-<div id="particles-js"></div>
 <div class="container">
-   <div class="row">
+   <div id="particles-js" class="row">
        <div class="col-md-4 col-md-offset-4">
            <div class="login-panel panel panel-default">
                <div class="panel-heading text-center lead">Login</div>
@@ -79,11 +86,3 @@ $("ul.nav.navbar-nav.navbar-right").css("display","none");
 </script>
 
 {% endblock %}
-
-
-{% block head %}
-  {% load static %}
-
-{% endblock %}
-
-{% block body %}

@@ -50,11 +50,10 @@
                     gisTable = table;   //Update GisTable Variable
                     bindGisDataRemove();    //Enable the Remove Row Buttons
                     $(".loading-text").hide();  //Hide Loading Table
-                    displayBtns();
+                    displayBtns(); //Displays the additional buttons.
                 }
             },3000);
         }
-
         function generateTableColumns(){
             meta_loaded = false;    //Status as not loaded
             /**
@@ -85,7 +84,6 @@
                 console.log(columns);
             }, 200);
         }
-
         function editCellData(field, value, row, element){
             /** Converts the Data Table's <td> to <input> to allow data to be modified and store in database
              * Function accepts parameters according to onDblClickCell Event of Bootstrap Table
@@ -110,29 +108,6 @@
             var prevValue = value;  //store Current Value
             var data_id = row["id"];
             var field_attr = "";
-<<<<<<< HEAD
-            $.each(metaFieldsRaw, function(i,v){
-                if(v.key_name == key){
-                    field_attr+=' type="'+v.key_type+'"';
-                    if(v.min!="Null" && v.min!="undefined")
-                        field_attr+=' min="'+v.min+'"';
-                    if(v.max!="Null" && v.max!="undefined")
-                        field_attr+=' max="'+v.max+'"';
-                    if(v.step!="Null" && v.step!="undefined")
-                        field_attr+=' step="'+v.step+'"';
-                    if(v.max_len!="Null" && v.max_len!="undefined")
-                        field_attr+=' max-len="'+v.max_len+'"';
-                    if(v.required!="Null" && v.required!=undefined && v.required!="undefined" && v.required=="True")
-                        field_attr+=' required';
-                    return false;
-                }
-            });
-            element.addClass("edit-mode");
-            element.html('<div class="form-group"><input '+field_attr+' value="'+value+'" class="form-control editGisDataInput"><br><i class="glyphicon glyphicon-remove pull-right icon-btn closeEditGisDataBtn"></i><i class="glyphicon glyphicon-ok submitEditGisDataBtn pull-right icon-btn"></i></div>');
-            gisTable.bootstrapTable('resetView');
-            var gisInput = element.find(".editGisDataInput");
-=======
-
             field_attr += addMetaFieldAttributes(key);
             element.addClass("edit-mode");  //Enter Edit Mode
             showNotification("Edit Mode on "+data_id+":"+key, "info");  //Show Notification
@@ -143,7 +118,6 @@
 
             var gisInput = element.find(".editGisDataInput");   // Select the newly created Input Element
             /** Bind keydown handler to new element **/
->>>>>>> a117f2e4d4e0813f522d880d89e3e0f4a642a567
             gisInput.on("keydown", function(e){
                 $this = $(this);
                 /** Submit the new data on "Enter" **/
@@ -187,28 +161,12 @@
                 });
                 function processResponse(r){
                     if(r.status == "success"){
-<<<<<<< HEAD
-                        var cell = field.parents("td");
-                        cell.css("transition","1s");
-                        cell.addClass("bg-success");
-                        setTimeout(function(){
-                            cell.removeClass("bg-success");
-                        },2000);
-                        cell.removeClass("edit-mode");
-                        cell.html(value);
-                        var ind = gisTable.find("tr").index(cell.parents("tr"))-1;
-                        gisTable.bootstrapTable('updateCell',{index:ind, field:key, value:value});
-                        gisTable.bootstrapTable('resetView');
-                        tableError.fadeOut();
-                        tableError.removeClass("alert-danger").addClass("alert-success").html("Successfully Updated!").fadeIn();
-=======
                         parent.removeClass("edit-mode");  //Exit Edit Mode
                         parent.html(value);   // Update Value
                         var parentRowIndex = gisTable.find("tr").index(parentRow)-1;
                         /** Update Table Cell **/
                         gisTable.bootstrapTable('updateCell',{index:parentRowIndex, field:key, value:value, reinit:false});
                         showNotification('Successfully Updated '+data_id+":"+key, 'success');    //Notify The user
->>>>>>> a117f2e4d4e0813f522d880d89e3e0f4a642a567
                     }else{
                         if(r.status == "error"){
                             field.tooltip({title:r.msg, trigger: "manual", placement:"auto bottom"});
@@ -223,25 +181,18 @@
                                 }
                             });
                             submitEditGisDataBtn.removeClass("glyphicon-refresh").addClass("glyphicon-ok");
-<<<<<<< HEAD
-                            tableError.fadeOut();
-                            tableError.removeClass("alert-success").addClass("alert-danger").html("Successfully Updated!").fadeIn();
-=======
                             showNotification("Error Occured "+data_id+":"+key, "error");
->>>>>>> a117f2e4d4e0813f522d880d89e3e0f4a642a567
                         }
                     }
                 }
             }
         }
-
         function bindGisDataRemove(){
             /** Binds Remove Button in rows to delete the data **/
             if(isTableEditable == 'false' || isTableEditable == false){
                 $(".gisDataRemoveBtn").hide();
                 return false;
             }
-
             $(".gisDataRemoveBtn").on("click", function(e){
                 e.preventDefault();
                 removeGisData($(this).parents("tr"));
@@ -277,25 +228,13 @@
                     showNotification("Successfully Removed!", "success");
                 }else{
                     if(r.status == "error"){
-<<<<<<< HEAD
-                        tableError.fadeOut();
-                        tableError.removeClass("alert-success").addClass("alert-danger");
-                        tableError.html("Unable to Delete due to "+r.msg);
-                        tableError.fadeIn();
-                    }
-=======
                         showNotification("Unable to remove!<br>"+r.msg, "error");
                     }
->>>>>>> a117f2e4d4e0813f522d880d89e3e0f4a642a567
                 }
                 bindGisDataRemove();
             }
         }
         loadGisDataTable(gisTable);
-<<<<<<< HEAD
-    </script>
-=======
-
         function generateGraphsData(callbackfunc){
             var data = [];
             var ignoredKeys = ['sample_identifier','latitude','longitude','year','id','data_group']
@@ -326,4 +265,3 @@
             },200);
         }
     </script>
->>>>>>> a117f2e4d4e0813f522d880d89e3e0f4a642a567

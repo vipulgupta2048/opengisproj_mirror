@@ -14,13 +14,28 @@
   font-size: 18px;
   margin-bottom: 2px;
 }
+.navbar-brand{
+  margin: 0!important;
+}
 .navbar a{
   padding: 20px!important;
   line-height: 25px!important;
 }
-.dropdown a{
+.dropdown{
+  padding: 0;
+  margin: 0;
+}
+.dataDropdown-toggle{
+  height: 65px;
+  padding: 20px!important;
+  line-height: 25px!important;
+}
+.listHeader{
+  margin: 10px;
+}
+.listElement a{
   padding: 10px!important;
-  line-height: 20px!important;
+  margin: 0!important;
 }
 </style>
 <div class="navbar navbar-default">
@@ -37,17 +52,17 @@
         <div class="collapse navbar-collapse" id="mainNav">
             <ul class="nav navbar-nav">
                 <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Data Tools<span class="caret"></span></a>
-                    <ul class="dropdown-menu padding-20-p">
-                        <li><strong>GIS Data</strong></li>
-                        <li><a href="/portal/add">Add New GIS Data</a></li>
-                        <li><a href="/portal/browse">Browse</a></li>
+                    <a href="#" id='dataDropdown-toggle' class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Data Tools<span class="caret"></span></a>
+                    <ul class="dropdown-menu padding-20-">
+                        <li class="listHeader"><strong>GIS Data</strong></li>
+                        <li class="listElement"><a href="/portal/add">Add Data</a></li>
+                        <li class="listElement"><a href="/portal/browse">Browse Table</a></li>
                         <li role="separator" class="divider"></li>
-                        <li><strong>GIS Parameters</strong></li>
-                        <li><a href="/portal/parameters">Add/Browse Parameters</a></li>
+                        <li class="listHeader"><strong>GIS Parameters</strong></li>
+                        <li class="listElement"><a href="/portal/parameters">Add/Browse Parameters</a></li>
                         <li role="separator" class="divider"></li>
-                        <li><strong>GIS Data Groups</strong></li>
-                        <li><a href="/portal/datagroups">Add/Browse Data Groups</a></li>
+                        <li class="listHeader"><strong>GIS Data Groups</strong></li>
+                        <li class="listElement"><a href="/portal/datagroups">Add/Browse Data Groups</a></li>
                     </ul>
                 </li>
                 <li><a href="/portal/reports">Reports</a></li>
