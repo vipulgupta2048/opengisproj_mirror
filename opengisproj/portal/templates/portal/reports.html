@@ -43,7 +43,9 @@
             </section>
             <section class="pull-left height-100 col-md-9 no-padding">
                 <div class="container height-inherit no-margin no-padding width-100-p">
-                    <div id="gisMap" class="height-inherit"></div>
+                    <div id="gisMap" class="height-inherit">
+						<div id="map"></div>
+                    </div>
                 </div>
             </section>
         </div>
@@ -65,15 +67,53 @@
 {% endblock %}
 
 {% block js %}
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD2DVlvcLu7o2m-6OhfbipppHEzRofJh48&callback=initMap"async defer></script>
 <script>
     var map;    //Stores Map Instance
     var mapsContainer = $("#gisMap")[0];    //Default Map Container
     var cent_lat = 23.48; //Sihora, MP
     var cent_long = 80.12; //Sihora, MP
-    var api_loaded = false, map_loaded = false;     //Variables to Check if API and Map is loaded
-    var curr_markers = [];  //Stores Current Map Markers
-    var curr_data = [], columns = [];
+    var api_loaded = false, map_loaded = false;
+    var curr_data = [], columns = [], curr_markers = [];
     var dataGroupSelect = $(".gisDataGroupSelect");
+    
+    var styles = {
+        default: null,
+        hide: [
+          {
+            featureType: 'poi.business',
+            stylers: [{visibility: 'off'}]
+          },
+          {
+            featureType: 'transit',
+            elementType: 'labels.icon',
+            stylers: [{visibility: 'off'}]
+          },
+          { 
+			featureType: 'poi', 
+			elementType: 'labels.text', 
+			stylers: [{visibility: 'off'}] 
+		  },
+          { 
+			featureType: 'road.arterial',
+			stylers: [{visibility: 'off'}]
+		  },
+		  { featureType: 'road.highway',
+			elementType: 'labels',
+			stylers: [{visibility: 'off'}]
+		  },
+		  { 
+			featureType: 'road.local',
+			stylers: [{visibility: 'off'}]
+		  },
+		  { 
+			featureType: 'road.local', 
+			elementType: 'labels',  
+			stylers: [{visibility: 'off'}] 
+		  }
+          
+        ]    
+    };
     function getCurrCoord(){
         /** Get Curr User's Cooordinates and store them**/
         if(navigator.geolocation){
@@ -102,12 +142,12 @@
         api_loaded = true;
         showMap();  //Load Map once API is loaded
     }
-
     function showMap(){
         map = new google.maps.Map(mapsContainer, {
             center: {lat: cent_lat, lng: cent_long },
             zoom: 5,
             mapTypeId: google.maps.MapTypeId.HYBRID, 
+            scrollwheel: false,
             panControl: true,
             zoomControl: true,
             mapTypeControl: false,
@@ -117,6 +157,8 @@
             rotateControl: false
         });
         map_loaded = true;  //Set Map is Loaded Variable
+        // Add controls to the map, allowing users to hide/show features.
+        map.setOptions({styles: styles['hide']});
         var mapDataDefaultTimer = setInterval(function(){
             /** Set Repeated Function Call to check if GIS Data is loaded **/
             if(gis_data_stored == true){
@@ -125,7 +167,37 @@
                 loadGisDataToMap(data);  // Load the data to map
             }
         });
+        $.ajax({
+            url: apiURI+'getshapefilecoord',
+            type:"GET",
+            datatype: "JSON",
+            success: function(response){
+                r = response;
+                plotMapShapeData(r);
+            },
+            error: function(response){
+                console.log(response);
+            } 
+        });
     }
+    function plotMapShapeData(data){
+        $.each(data,function(i,v){
+            var shapeData = v;
+            var path = new google.maps.Polyline({
+                path:shapeData,
+                geodesic: true,
+                strokeColor: '#FF0000',
+                strokeOpacity: 6.0,
+                strokeWeight: 3  
+            });
+            var timer = setInterval(function(){
+            if(map_loaded){
+                clearInterval(timer);
+                path.setMap(map);
+            }
+        });
+	});
+}
     function loadGisDataToMap(data){
         /** Loads Provided data to Map and removes existing data **/
         if(curr_markers.length>0){
@@ -295,6 +367,10 @@
     }
     init();     //Run Initial Tasks
 </script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD2DVlvcLu7o2m-6OhfbipppHEzRofJh48&callback=initMap"></script>
 {% include 'portal/partials/gistable.html' %}
 {% endblock %}
+
+
+
+
+		  

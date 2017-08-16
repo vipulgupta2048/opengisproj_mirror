@@ -321,7 +321,7 @@ def edit_data_group(group_id, key, new_value, user):
     return toReturn
 
 def shapefile_reader():
-    fileUrl = os.getcwd()+'\portal\static\portal\shapefiles\data1\lines'
+    fileUrl = os.getcwd()+'/portal/static/portal/shapefiles/data1/lines'
     sf = shapefile.Reader(fileUrl)
     shapes = sf.shapes()
     data = []
