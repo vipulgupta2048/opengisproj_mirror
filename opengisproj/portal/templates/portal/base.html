@@ -23,6 +23,8 @@
         <script src="{% static 'portal/js/notify.min.js' %}"></script>
         <script src="{% static 'portal/js/functions.js' %}"></script>
         <script>
+            //GLobal CSRF Access Token
+            var csrftoken = "{{ csrf_token }}";
             var gisMetaFields, gisData, gisGroups;
             var gis_data_stored = false, gis_meta_fields_stored = false, gis_groups_stored = false;
             getMetaFields(storeMetaFields);

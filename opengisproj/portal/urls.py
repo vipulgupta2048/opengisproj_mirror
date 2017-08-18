@@ -11,6 +11,7 @@ urlpatterns = [
     url(r'^datagroups/?$', views.dataGroups),
     url(r'^reports/?$', views.reports),
     url(r'^shapefiles/?$', views.shapefilesManager),
+    url(r'^importView/?$', views.importView),
     url(r'^ajax/(?P<action>[a-zA-Z]*)/?$', views.processAjax),
     url(r'^install/?$', views.demo),
     url(r'^fileupload/?$', views.fileupload),

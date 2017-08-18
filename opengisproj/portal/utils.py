@@ -1,9 +1,13 @@
 import logging
+import os
 from .models import *
 import json
 import shapefile
 import os
 from django.conf import settings
+import numpy as np
+import pandas as pd
+
 def install(user):
     temp = options.objects.create(option_name="meta_field",value='{"key_name": "bod", "label": "BOD", "key_type": "number", "min": "", "max": "", "max_len": "", "step": "0.000001", "required": "True"}')
     temp.save()
@@ -73,7 +77,8 @@ def is_meta_key(key, data_group):
         toReturn["status"] = "error"
         toReturn["msg"] = e
         toReturn["errcode"] = "500"
-        return toReturn
+
+    return toReturn
 
 def add_new_data(post_data, request_user, ret_json=False):
     toReturn = {}
@@ -105,8 +110,10 @@ def add_new_data(post_data, request_user, ret_json=False):
         print(e)
         toReturn["msg"] = e
         toReturn["errcode"] = "500"
+
     return toReturn
-def get_data_groups():
+
+def get_data_groups(): 
     try:
         groups = data_groups.objects.all()
         arr = []
@@ -225,8 +232,7 @@ def edit_gis_data(meta_key, data_id, new_value, user):
         toReturn["status"] = "error"
         toReturn["msg"] = e
         toReturn["errcode"] = "500"
-
-    return toReturn
+        return toReturn
 
 def edit_gis_param(param_key, opt_id, new_value, user):
     toReturn = {}
@@ -302,6 +308,7 @@ def remove_data_group(group_id, user):
         toReturn["msg"] = e
         toReturn["errcode"] = "500"
     return toReturn
+
 def edit_data_group(group_id, key, new_value, user):
     toReturn = {}
     try:
@@ -386,3 +393,71 @@ def get_shapes():
         return data
     except Exception as e:
         return str(e)
+def import_gis_data():
+    Location = os.getcwd() + '/portal/data1.xlsx'
+    df = pd.read_excel(Location, 0, index_col='Sl. No')
+    excelFields = df.columns
+    temp = []
+    for x in excelFields:
+        temp.append(x)
+    print(temp)
+    return temp
+
+def get_excel_data_from_mapping(mapping):
+    mappingString = mapping['mapping']
+    mappingObjects = json.loads(mappingString)
+    metaFields = get_meta_fields()
+
+    def get_meta_attributes(meta_key):
+        for x in metaFields:
+            obj = x
+            if obj['key_name'] == meta_key:
+                attr = {}
+                for x in obj:
+                    attr[x] = obj[x]
+                return attr
+        return False
+
+    excelData = {}
+    approved = []
+    rejected = []
+    Location = os.getcwd() + '/portal/data1.xlsx'
+    df = pd.read_excel(Location, 0, index_col='Sl. No')
+    for row in df.itertuples():
+        print("Iterating new row!")
+        print(row)
+        obj = {}
+        flag = 0
+        for x in mappingObjects:
+            db_key = x['db_key']    #select current db key from array
+            excel_key = x['excel_key']
+            df.rename(columns={excel_key : db_key}, inplace=True)
+            attr = get_meta_attributes(db_key) #Get it's attributes array of db_key
+            excel_header = db_key
+            excel_val = df.ix[row.Index][db_key]
+            if attr['key_name'] == db_key:
+                print("Key:"+attr['key_name']+" type:"+attr['key_type']+" max: "+attr['max'])
+                obj[attr['key_name']] = str(excel_val)
+                if attr['key_type'] == 'number':
+                    step = float(attr['step'])
+                    prec = int(len(str(step))- len(str(np.floor(step)))+1)
+                    excel_val = round(excel_val,prec)
+                    if float(excel_val) < float(attr['min']) or float(excel_val) > float(attr['max']):
+                        print("flag is 1")
+                        flag = 1
+                elif attr['key_type'] == 'text' and attr['max_len'] != '':
+                    if str(len(excel_val)) > int(attr['max_len']):
+                        flag = 1
+        print("ROw created")
+        print(obj)
+        if flag == 1:
+            print("REJECTED")
+            rejected.append(obj)
+        else:
+            print("APPROVED")
+            approved.append(obj)
+    excelData["approved"] = approved
+    excelData["rejected"] = rejected
+    print("excelData")
+    print(excelData)
+    return excelData

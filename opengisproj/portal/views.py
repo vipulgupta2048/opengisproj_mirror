@@ -4,38 +4,48 @@ from .utils import *
 from .forms import UploadForm
 # Create your views here.
 
+
 def demo(request):
     install(user=request.user)
     return HttpResponse("OK")
 
+
 def home(request):
-    if request.user.is_authenticated == True:
+    if request.user.is_authenticated is True:
         f = get_meta_fields()
-        return render(request, 'portal/index.html', {'meta_fields':f})
+        return render(request, 'portal/index.html', {'meta_fields': f})
     else:
         return redirect('/account/login?next=/portal/home')
 
+
 def add(request):
-    if request.user.is_authenticated == False:
+    if request.user.is_authenticated is False:
         return redirect('/account/login?next=/portal/add')
     f = get_meta_fields()
-    return render(request, 'portal/add-new.html', {'meta_fields':f})
+    return render(request, 'portal/add-new.html', {'meta_fields': f})
+
 
 def browse(request):
-    if request.user.is_authenticated == False:
+    if request.user.is_authenticated is False:
         return redirect('/account/login?next=/portal/browse')
     return render(request, 'portal/browse.html')
+
+
 def addParam(request):
-    if request.user.is_authenticated == False:
+    if request.user.is_authenticated is False:
         return redirect('/account/login?next=/portal/parameters')
     return render(request, 'portal/add-param.html')
+
+
 def dataGroups(request):
-    if request.user.is_authenticated == False:
+    if request.user.is_authenticated is False:
         return redirect('/account/login?next=/portal/datagroups')
     return render(request, 'portal/data-groups.html')
+
+
 def reports(request):
-    if request.user.is_authenticated == False:
-        return redirect('/accounts/login?next=/portal/reports')
+    if request.user.is_authenticated is False:
+        return redirect('/account/login?next=/portal/reports')
     return render(request, 'portal/reports.html')
 def shapefilesManager(request):
     if request.user.is_authenticated == False:
@@ -52,83 +62,101 @@ def fileupload(request):
             return render(request, 'portal/upload.html', {'msg':"Successfully Uploaded!"})
     else:
         return HttpResponse(status=405)
+def importView(request):
+    if request.user.is_authenticated is False:
+        return redirect('/account/login?next=/portal/importView')
+    return render(request, 'portal/importView.html')
 def processAjax(request, action):
-    if request.user.is_authenticated == False:
+    if request.user.is_authenticated is False:
         return JsonResponse("Unauthenticated Request", safe=False)
-    if action=='getmetafields':
+    if action == 'getmetafields':
         res = get_meta_fields(True)
         return JsonResponse(res, safe=False, content_type="text/html")
-    elif action=="addNewData":
+    elif action == "addNewData":
         if request.method == "POST":
             post_data = request.POST
             res = add_new_data(post_data, request.user, ret_json=True)
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
-    elif action=="getgisdata":
+    elif action == "getgisdata":
         if(request.method == "GET"):
             get_data = request.GET
             res = get_meta()
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
-    elif action=="addnewparam":
+    elif action == "addnewparam":
         if(request.method == "POST"):
             post_data = request.POST
             res = add_param(post_data, user=request.user)
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
-    elif action=="removeparam":
+    elif action == "removeparam":
         if(request.method == "POST"):
             post_data = request.POST
             res = remove_param(option_id=post_data['id'], group_id=post_data['data_group'], user=request.user)
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
-    elif action=="removedata":
+    elif action == "importgisdata":
+        if(request.method == "POST"):
+            post_data = request.POST
+            res = import_gis_data()
+            return JsonResponse(res, safe=False, content_type="text/html")
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action == "getexceldatafrommapping":
+        if(request.method == "POST"):
+            post_data = request.POST
+            res = get_excel_data_from_mapping(post_data)
+            return JsonResponse(res, safe=False, content_type="text/html")
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action == "removedata":
         if(request.method == "POST"):
             post_data = request.POST
             res = remove_gis_data(data_id=post_data['id'], user=request.user)
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
-    elif action=="editdata":
+    elif action == "editdata" :
         if(request.method == "POST"):
             post_data = request.POST
             res = edit_gis_data(meta_key=post_data['key'],data_id=post_data['dataId'],new_value=post_data['value'], user=request.user)
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
-    elif action=="editparam":
+    elif action == "editparam":
         if(request.method == "POST"):
             post_data = request.POST
             res = edit_gis_param(param_key=post_data['key'],opt_id=post_data['paramId'],new_value=post_data['value'], user=request.user)
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
-    elif action=="getdatagroups":
+    elif action == "getdatagroups":
         if(request.method == "GET"):
             get_data = request.GET
             res = get_data_groups()
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
-    elif action=="addnewdatagroup":
+    elif action == "addnewdatagroup":
         if(request.method == "POST"):
             post_data = request.POST
             res = add_data_group(post_data, request.user)
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
-    elif action=="removedatagroup":
+    elif action == "removedatagroup":
         if(request.method == "POST"):
             post_data = request.POST
             res = remove_data_group(group_id = post_data['group_id'], user=request.user)
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
-    elif action=="editdatagroup":
+    elif action == "editdatagroup":
         if(request.method == "POST"):
             post_data = request.POST
             res = edit_data_group(group_id = post_data['group_id'], key = post_data['key'], new_value = post_data['value'], user=request.user)

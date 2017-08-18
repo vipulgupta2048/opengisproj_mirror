@@ -1,0 +1,150 @@
+{% extends 'portal/base.html' %}
+{% load static %}
+
+{% block title %}Import{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'portal/css/bootstrap-table.min.css' %}" />
+    <style>
+        #gisImportTable{
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding-top: 20px;
+        }
+        #gisImportTable th{
+            font-weight: bold;
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        #gisImportTable tr{
+            margin: 5px;
+            padding: 8px;
+        }
+        #gisImportTable th:hover, tr:hover {
+            background-color: #f5f5f5;
+        }
+        #gisImportTable td{
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+        #submitImporterDataBtn {
+            margin: 10px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary center-block">Upload</button>
+</form>
+
+   <div class="row width-inherit">
+        <h1 class="text-center">GIS Data Import</h1>
+        <div class="row">
+            <div class="col-xs-12">
+                <h3 class="text-center">Check GIS Parameters</h3>
+            </div>
+            <div class="container">
+                <div class="col-xs-12">
+                    <form id="addNewImportCheckForm">
+                        <div class="form-error text-center text-danger"></div>
+                        {% csrf_token %}
+                        <div class="form-group Check-group"></div>
+                        <button type="submit" class="btn btn-primary center-block" id="addNewCheckBtn">Confirm Parameter Check</button>
+                    </form> 
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="container">
+                <h3 class="text-center loading-text">Data to be stored</h3>
+                <h4 class="text-center text-danger table-error"></h4>
+                <table id="gisImportTable"></table>
+                <button type="submit" class="btn btn-large btn-primay center-block" id="submitImporterDataBtn">Start Import</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'portal/js/bootstrap-table.min.js' %}"></script>
+    <script>
+        $(document).ready(function(e){
+            var form = $("#addNewImportCheckForm");
+            var apiURI = '/portal/ajax/';
+            var submitBtn = $("#addNewCheckBtn");
+            var tableError = $(".table-error");
+            var excelFields = [];
+            var CheckGroup = $(".Check-group");
+            var is_excel_field_loaded = false;
+            //getmetafields(storeData);
+            function init(){
+                importgisdata(excelField_generate);
+                key_name_generate();
+            }
+            function excelField_generate(excel_data){
+                excelFields = excel_data;
+                is_excel_field_loaded = true;
+            }
+            function key_name_generate(){
+                var timer = setInterval(function(){
+                    if(is_excel_field_loaded == true && gis_meta_fields_stored == true){
+                        clearInterval(timer);
+                        console.log(gisMetaFields);
+                        var html;
+                        for (var x in gisMetaFields){
+                            console.log("I am fucking!!!");
+                            html = '<label for="key_name">'+gisMetaFields[x].label+' (required)</label>';
+                            html += '<select class="form-control keyMapping" name="'+gisMetaFields[x].key_name+'" id="'+gisMetaFields[x].key_name+'" class="check_name" data-db-key="'+gisMetaFields[x].key_name+'" required>';
+                            for (var y in excelFields){
+                                html += '<option value="'+excelFields[y]+'">'+excelFields[y]+'</option>';
+                            }
+                            html += '</select>';
+                            CheckGroup.append(html);
+                        }
+                    }
+                }, 200);   
+            }
+            submitBtn.click(function(e){
+                e.preventDefault();
+                var mapping = [];
+                CheckGroup.find(".keyMapping").each(function(e){
+                    var obj = {};
+                    obj["db_key"] = $(this).attr("data-db-key");
+                    obj["excel_key"] = $(this).val();
+                    mapping.push(obj);
+                });
+                getExcelDataFromMapping(mapping, readExcelData);
+            });
+            function readExcelData(data){
+                console.log(data);
+                $.each(data.approved, function(i,v){
+                    var html = "<tr>";
+                    if (i==0){
+                        html += '<th class="col-sm-1">Sl. No.</th>';
+                    }
+                    else{
+                        html += '<td class="col-sm-1">'+i+'</td>';
+                    }
+                    $.each(v, function(key,value){
+                        if (i==0){
+                            html += '<th class="col-sm-2">'+key+'</th>';
+                        }
+                        else{
+                        html += '<td class="col-sm-2">'+value+'</td>';
+                        }
+                    });
+                    html += '</tr>';
+                    $("#gisImportTable").append(html);
+                });
+            //    $("#submitImporterDataBtn").fadeIn();
+                $("#submitImporterDataBtn").click(function(e){
+                    submitImporterData(data.approved);
+                });        
+            }
+                init();
+        });
+    </script>
+{% endblock %}
