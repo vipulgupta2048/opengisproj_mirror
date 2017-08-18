@@ -3,6 +3,7 @@ from .models import *
 import json
 import shapefile
 import os
+from django.conf import settings
 def install(user):
     temp = options.objects.create(option_name="meta_field",value='{"key_name": "bod", "label": "BOD", "key_type": "number", "min": "", "max": "", "max_len": "", "step": "0.000001", "required": "True"}')
     temp.save()
@@ -320,15 +321,68 @@ def edit_data_group(group_id, key, new_value, user):
         toReturn["errcode"] = "500"
     return toReturn
 
-def shapefile_reader():
-    fileUrl = os.getcwd()+'/portal/static/portal/shapefiles/data1/lines'
-    sf = shapefile.Reader(fileUrl)
-    shapes = sf.shapes()
-    data = []
-    for x in range(len(shapes)):
-        curr_shape = sf.shape(x)
-        pairs = []
-        for point in range(len(curr_shape.points)):
-            pairs.append({"lat":curr_shape.points[point][1], "lng":curr_shape.points[point][0]})
-        data.append(pairs)
-    return data
+def shapefile_reader(shape_id):
+    try:
+        shapeDb = shapefiles.objects.filter(id=int(shape_id))[0]
+        MEDIA_ROOT = settings.MEDIA_ROOT.replace('\\','/')+'/'
+        shpFile = open(MEDIA_ROOT+str(shapeDb.shp_file.file_ref), "rb")
+        dbfFile = open(MEDIA_ROOT+str(shapeDb.dbf_file.file_ref), "rb")
+        shxFile = open(MEDIA_ROOT+str(shapeDb.shx_file.file_ref),"rb")
+        sf = shapefile.Reader(shp=shpFile, dbf=dbfFile)
+        shapes = sf.shapes()
+        data = []
+        for x in range(len(shapes)):
+            curr_shape = sf.shape(x)
+            pairs = []
+            for point in range(len(curr_shape.points)):
+                pairs.append({"lat":curr_shape.points[point][1], "lng":curr_shape.points[point][0]})
+            data.append(pairs)
+        return data
+    except Exception as e:
+        return str(e)
+
+def getuploadedshapefiles():
+    try:
+        shapefiles = uploads.objects.filter(file_meta="shapefile")
+        arr = []
+        for x in shapefiles:
+            obj = {}
+            obj['id'] = x.id
+            obj['file_name'] = x.file_name
+            obj['description'] = x.description
+            obj['file_path'] = str(x.file_ref)
+            arr.append(obj)
+        return arr
+    except Exception as e:
+        return "Error"
+
+def create_new_shape(data):
+    toReturn = {}
+    try:
+        shp_file_id = int(data['shp_file_id'])
+        shx_file_id = int(data['shx_file_id'])
+        dbf_file_id = int(data['dbf_file_id'])
+        shpFile = uploads.objects.filter(id=shp_file_id)[0]
+        dbfFile = uploads.objects.filter(id=dbf_file_id)[0]
+        shxFile = uploads.objects.filter(id=shx_file_id)[0]
+        shape_name = data['shape_name']
+        shape = shapefiles.objects.create(shape_name=shape_name, shp_file = shpFile, shx_file = shxFile, dbf_file = dbfFile)
+        toReturn['status'] = "success"
+        toReturn['msg'] = shape.id
+    except Exception as e:
+        toReturn['status'] = "error"
+        toReturn['msg'] = str(e)
+    return toReturn
+
+def get_shapes():
+    try:
+        shapes = shapefiles.objects.all()
+        data = []
+        for shape in shapes:
+            obj = {}
+            obj['shape_name'] = shape.shape_name
+            obj['id'] = shape.id
+            data.append(obj)
+        return data
+    except Exception as e:
+        return str(e)

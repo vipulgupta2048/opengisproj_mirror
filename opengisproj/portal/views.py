@@ -40,13 +40,7 @@ def reports(request):
 def shapefilesManager(request):
     if request.user.is_authenticated == False:
         return redirect('/accounts/login?next=/portal/shapefiles')
-    if request.method == 'POST':
-        form = UploadForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            render(request, 'portal/shapefiles.html',{'form':form, 'meta':'shapefile', 'msg':"Saved"})
-    else:
-        form = UploadForm()
+    form = UploadForm()
     return render(request, 'portal/shapefiles.html',{'form':form, 'meta':'shapefile'})
 def fileupload(request):
     if request.user.is_authenticated == False:
@@ -55,8 +49,7 @@ def fileupload(request):
         form = UploadForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            nextPage = request.POST['next']+'?msg=Uploaded+Successfully'
-            return render(request, nextPage)
+            return render(request, 'portal/upload.html', {'msg':"Successfully Uploaded!"})
     else:
         return HttpResponse(status=405)
 def processAjax(request, action):
@@ -144,8 +137,27 @@ def processAjax(request, action):
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
     elif action=="getshapefilecoord":
         if(request.method == "GET"):
+            get_data = request.GET
+            res = shapefile_reader(get_data['shapeId'])
+            return JsonResponse(res, safe=False)
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="getuploadedshapefiles":
+        if(request.method == "GET"):
+            res = getuploadedshapefiles()
+            return JsonResponse(res, safe=False)
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="addnewshape":
+        if(request.method == "POST"):
             post_data = request.POST
-            res = shapefile_reader()
+            res = create_new_shape(post_data)
+            return JsonResponse(res, safe=False)
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="getshapes":
+        if(request.method == "GET"):
+            res = get_shapes()
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)

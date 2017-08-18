@@ -40,6 +40,15 @@ class uploads(models.Model):
     description = models.TextField(blank=True)
     file_ref = models.FileField(upload_to='uploads/%Y/%m/%d')
     uploaded_at = models.DateTimeField(auto_now_add=True)
-    file_meta = models.TextField()
+    file_meta = models.CharField(max_length=150)
     class Meta:
         db_table = "uploads"
+
+class shapefiles(models.Model):
+    shape_name = models.CharField(max_length=256)
+    shp_file = models.ForeignKey(uploads, related_name='shp_file', on_delete=models.CASCADE)
+    dbf_file = models.ForeignKey(uploads, related_name='dbf_file', on_delete=models.CASCADE)
+    shx_file = models.ForeignKey(uploads, related_name='shx_file',on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "shapefiles"

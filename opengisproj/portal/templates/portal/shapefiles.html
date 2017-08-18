@@ -1,5 +1,117 @@
 {% extends 'portal/base.html' %}
+{% load static %}
 {% block title %}Shapefile Manager{% endblock %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'portal/css/select2.min.css' %}" />
+{% endblock %}
 {% block content %}
-    {% include 'portal/partials/file-uploader.html' %}
+    <h1 class="text-center">Shapefiles Manager</h1>
+    <section>
+        <div class="container">
+            <h1> Upload New File</h1>
+            {% include 'portal/partials/file-uploader.html' %}
+        </div>
+    </section>
+    <section>
+        <div class="container">
+            <h1> Create New Shape</h1>
+            <form id="createNewShapeForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="shapefileName">Enter Name of Shapefile:</label>
+                    <input class="form-control" name="shape_name" id="shapefileName" placeholder="Enter name of shape" required>
+                </div>
+                <div class="form-group">
+                    <label for="shapefileDbf">Select DBF File</label>
+                    <select class="selectpicker form-control" id="shapefileDbf" name="dbf_file_id" required>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="shapefileShp">Select SHP File</label>
+                    <select class="selectpicker form-control" id="shapefileShp" name="shp_file_id" required>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="shapefileShx">Select SHX File</label>
+                    <select class="selectpicker form-control" id="shapefileShx" name="shx_file_id" required>
+                    </select>
+                </div>
+                <div class="form-group text-center">
+                    <button class="btn text-center btn-primary btn-lg" type="submit" id="createNewShapeBtn">Submit</button>
+                </div>
+            </form>
+        </div>
+    </section>
+    <section>
+        <div class="container">
+            <h2>Shapes in Database</h2>
+            <table id="shapesTable" data-is-editable = "false"></table>
+        </div>
+
+    </section>
+
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'portal/js/select2.full.min.js' %}"></script>
+    <script src="{% static 'portal/js/bootstrap-table.min.js' %}"></script>
+    <script>
+        $(document).ready(function(e){
+            var createShapeform = $("#createNewShapeForm");
+            var createNewShapeBtn = $("#createNewShapeBtn");
+            var shapesTable = $("#shapesTable");
+            var dbfFileSelector = $("#shapefileDbf");
+            var shpFileSelector = $("#shapefileShp");
+            var shxFileSelector = $("#shapefileShx");
+            
+            function init(){
+                $("#id_file_meta").val('shapefile');
+                $("#id_file_meta").keydown(function(e){
+                    e.preventDefault();
+                });
+                loadShapefileSelectors(dbfFileSelector, shpFileSelector, shxFileSelector);
+                getShapes(loadShapesIntoTable);
+            }
+            $(".selectpicker").select2({
+                placeholder: "Select an uploaded file"
+            }); 
+            createShapeform.submit(function(e){
+                e.preventDefault();
+                var form_data = $(this).serialize();
+                createNewShapeBtn.attr("disabled", "disabled");
+                addShape(form_data, addShapeResponse);
+            });
+            function addShapeResponse(response){
+                createNewShapeBtn.removeAttr("disabled");
+                if(response.status == "success"){
+                    showNotification("New Shape Created!", "success");
+                    createShapeform[0].reset();
+                }else{
+                    if(response.status == "error"){
+                        showNotification("Error Occured! Try Again!");
+                    }
+                }
+            }
+            function loadShapesIntoTable(data){
+                console.log(data);
+                var columns = [{field: 'state', checkbox: true, align: 'center'},
+                {field: "id", title: "Id", editable: false},
+                {field: "shape_name", title:"Shape Name"}];
+                shapesTable.bootstrapTable({
+                    columns: columns, 
+                    data: data, 
+                    idField: "id", 
+                    uniqueId: "id", 
+                    pagination: true,
+                    pageSize: 10, 
+                    search: true, 
+                    showColumns: true, 
+                    showToggle: true, 
+                    singleSelect: true
+                });
+                shapesTable.bootstrapTable('hideLoading');
+            }
+            init();
+        });
+    </script>
 {% endblock %}
