@@ -321,3 +321,106 @@ function showNotification(msg, type){
     /** Shows Global Notification using notify.js */
     $.notify(msg, {position:"bottom left", className:type});
 }
+
+function loadShapefileSelectors(dbfSelector, shpSelector, shxSelector){
+    $.ajax({
+        url: apiURI+'getuploadedshapefiles',
+        type: 'GET',
+        dataType: 'JSON',
+        success: function(response){
+            r = response;
+            processResponse(r);
+        },
+        error: function(respone){
+            console.log(response);
+        }
+    });
+    function processResponse(r){
+        var shp = [];
+        var dbf = [];
+        var shx = [];
+        $.each(r, function(i,v){
+            var path = v['file_path'];
+            if(path.match(/(dbf)/g) !=null){
+                dbf.push(v);
+            }else{
+                if(path.match(/(shp)/g) !=null){
+                    shp.push(v);
+                }else{
+                    if(path.match(/(shx)/g) !=null){
+                        shx.push(v);
+                    }
+                }
+            }
+        });
+        addToSelectors(dbfSelector, dbf);
+        addToSelectors(shpSelector, shp);
+        addToSelectors(shxSelector, shx);
+        function addToSelectors(selector, data){
+            $.each(data, function(i,v){
+                file_path = v.file_path.replace(/(.*\/)/g,"");
+                var html = '<option value="'+v.id+'">'+v.file_name+' ('+file_path+')'+'</option>';
+                selector.append(html);
+            });
+            $(document).trigger('uploadedshapefilesloaded');
+        }
+    }
+}
+function getShapes(callbackFunc){
+    $.ajax({
+        url: apiURI+'getshapes',
+        dataType: 'JSON',
+        type: 'GET',
+        success: function(response){
+            r = response;
+            callbackFunc(r);
+        },
+        error: function(response){
+            console.log(response);
+        }
+    });
+}
+function loadShapesSelector(element){
+    getShapes(processResponse);
+    function processResponse(r){
+        $.each(r, function(i,v){
+            var html = '<option value="'+v.id+'">'+v.shape_name+'</option>';
+            element.append(html);
+        });
+    }
+}
+
+function addShape(dataString, callbackFunc){
+    $.ajax({
+        url: apiURI+'addnewshape',
+        data: dataString,
+        type:'POST',
+        dataType: 'JSON',
+        success: function(response){
+            r = response;
+            processResponse(r);
+        },
+        error: function(response){
+            console.log(response);
+        }
+    });
+    function processResponse(r){
+        callbackFunc(r);
+    }
+}
+
+function getShapefileCoords(id, callbackFunc){
+    $.ajax({
+        url: apiURI+'getshapefilecoord',
+        data: 'shapeId='+id,
+        type:"GET",
+        datatype: "JSON",
+        success: function(response){
+            r = response;
+            callbackFunc(r);
+        },
+        error: function(response){
+            console.log(response);
+        } 
+    });
+}

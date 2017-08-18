@@ -14,6 +14,15 @@
         <div id='test' class="row width-100-p">
             <section class="pull-left height-100 col-md-3 overflow-scroll">
                 <div class="row">
+                    <h4 class="text-center">Overlay a Shape File</h4>
+                    <div class="col-xs-12">
+                        <label for="shapeSelector">Select a shapefile:</label>
+                        <select id="shapeSelector" class="form-control">
+                            <option></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
                     <h4 class="text-center">Filter by</h4>
                     <div class="col-xs-12 form-group">
                         <label>Select Data Group</label>
@@ -83,9 +92,9 @@
     var cent_lat = 28.1637151; //Sihora, MP
     var cent_long = 81.1170138; //Sihora, MP
     var api_loaded = false, map_loaded = false;
-    var curr_data = [], columns = [], curr_markers=[];
+    var curr_data = [], columns = [], curr_markers = [];
     var dataGroupSelect = $(".gisDataGroupSelect");
-    
+    var shapeSelect = $("#shapeSelector");
     var styles = {
         default: null,
         hide: [
@@ -97,8 +106,31 @@
             featureType: 'transit',
             elementType: 'labels.icon',
             stylers: [{visibility: 'off'}]
-          }
-        ]
+          },
+          { 
+			featureType: 'poi', 
+			elementType: 'labels.text', 
+			stylers: [{visibility: 'off'}] 
+		  },
+          { 
+			featureType: 'road.arterial',
+			stylers: [{visibility: 'off'}]
+		  },
+		  { featureType: 'road.highway',
+			elementType: 'labels',
+			stylers: [{visibility: 'off'}]
+		  },
+		  { 
+			featureType: 'road.local',
+			stylers: [{visibility: 'off'}]
+		  },
+		  { 
+			featureType: 'road.local', 
+			elementType: 'labels',  
+			stylers: [{visibility: 'off'}] 
+		  }
+          
+        ]    
     };
     function getCurrCoord(){
         /** Get Curr User's Cooordinates and store them**/
@@ -120,6 +152,7 @@
         },500);
     }
     function init(){
+        loadShapesSelector(shapeSelect);  //load a shape
         loadFilterKeys();   //Load Filter Keys
         getCurrCoord();    //Load Current Co-ordinates
     }
@@ -154,6 +187,28 @@
                 loadGisDataToMap(data);  // Load the data to map
             }
         });
+        shapeSelect.on("change", function(e){
+            if($(this).val()!="")
+                getShapefileCoords($(this).val(), plotMapShapeData);
+        });
+    }
+    function plotMapShapeData(data){
+        $.each(data,function(i,v){
+            var shapeData = v;
+            var path = new google.maps.Polyline({
+                path:shapeData,
+                geodesic: true,
+                strokeColor: '#FF0000',
+                strokeOpacity: 6.0,
+                strokeWeight: 3  
+            });
+            var timer = setInterval(function(){
+                if(map_loaded){
+                    clearInterval(timer);
+                    path.setMap(map);
+                }
+            });
+	    });
     }
     function loadGisDataToMap(data){
         /** Loads Provided data to Map and removes existing data **/
@@ -326,3 +381,8 @@
 </script>
 {% include 'portal/partials/gistable.html' %}
 {% endblock %}
+
+
+
+
+		  

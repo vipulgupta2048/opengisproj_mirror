@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from .utils import *
+from .forms import UploadForm
 # Create your views here.
 
 def demo(request):
@@ -36,7 +37,21 @@ def reports(request):
     if request.user.is_authenticated == False:
         return redirect('/accounts/login?next=/portal/reports')
     return render(request, 'portal/reports.html')
-
+def shapefilesManager(request):
+    if request.user.is_authenticated == False:
+        return redirect('/accounts/login?next=/portal/shapefiles')
+    form = UploadForm()
+    return render(request, 'portal/shapefiles.html',{'form':form, 'meta':'shapefile'})
+def fileupload(request):
+    if request.user.is_authenticated == False:
+        return redirect('/accounts/login?next=/portal/shapefiles')
+    if request.method == 'POST':
+        form = UploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return render(request, 'portal/upload.html', {'msg':"Successfully Uploaded!"})
+    else:
+        return HttpResponse(status=405)
 def processAjax(request, action):
     if request.user.is_authenticated == False:
         return JsonResponse("Unauthenticated Request", safe=False)
@@ -117,6 +132,32 @@ def processAjax(request, action):
         if(request.method == "POST"):
             post_data = request.POST
             res = edit_data_group(group_id = post_data['group_id'], key = post_data['key'], new_value = post_data['value'], user=request.user)
+            return JsonResponse(res, safe=False)
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="getshapefilecoord":
+        if(request.method == "GET"):
+            get_data = request.GET
+            res = shapefile_reader(get_data['shapeId'])
+            return JsonResponse(res, safe=False)
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="getuploadedshapefiles":
+        if(request.method == "GET"):
+            res = getuploadedshapefiles()
+            return JsonResponse(res, safe=False)
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="addnewshape":
+        if(request.method == "POST"):
+            post_data = request.POST
+            res = create_new_shape(post_data)
+            return JsonResponse(res, safe=False)
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="getshapes":
+        if(request.method == "GET"):
+            res = get_shapes()
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)

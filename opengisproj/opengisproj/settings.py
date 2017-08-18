@@ -27,7 +27,7 @@ DEBUG = env('DEBUG') # False if not in os.environ
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'y)l&po0t10j^5@vqh3-1k2f^tysl32v)whsfqitd5opmz%a)(i'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["192.168.0.105","localhost"]
 
 
 # Application definition
@@ -129,3 +129,7 @@ STATIC_URL = '/static/'
 
 #Login redirect
 LOGIN_REDIRECT_URL = '/portal/'
+
+#MEDIA Directory for uploads
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
