@@ -63,14 +63,15 @@ def fileupload(request):
     else:
         return HttpResponse(status=405)
 def importView(request):
-    if request.user.is_authenticated is False:
+    if request.user.is_authenticated == False:
         return redirect('/account/login?next=/portal/importView')
-    return render(request, 'portal/importView.html')
+    form = UploadForm()
+    return render(request, 'portal/importView.html', {'form':form})
 def processAjax(request, action):
     if request.user.is_authenticated is False:
         return JsonResponse("Unauthenticated Request", safe=False)
     if action == 'getmetafields':
-        res = get_meta_fields(True)
+        res = get_meta_fields()
         return JsonResponse(res, safe=False, content_type="text/html")
     elif action == "addNewData":
         if request.method == "POST":
@@ -103,14 +104,14 @@ def processAjax(request, action):
     elif action == "importgisdata":
         if(request.method == "POST"):
             post_data = request.POST
-            res = import_gis_data()
+            res = import_gis_data(post_data['file_id'])
             return JsonResponse(res, safe=False, content_type="text/html")
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
     elif action == "getexceldatafrommapping":
         if(request.method == "POST"):
             post_data = request.POST
-            res = get_excel_data_from_mapping(post_data)
+            res = get_excel_data_from_mapping(post_data['mapping'],post_data['file_id'], post_data['data_group'])
             return JsonResponse(res, safe=False, content_type="text/html")
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
@@ -186,6 +187,12 @@ def processAjax(request, action):
     elif action=="getshapes":
         if(request.method == "GET"):
             res = get_shapes()
+            return JsonResponse(res, safe=False)
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="getexcelfiles":
+        if(request.method == "GET"):
+            res = get_excel_files()
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)

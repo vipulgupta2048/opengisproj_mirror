@@ -22,11 +22,11 @@ function storeMetaFields(data){
     gis_meta_fields_stored = true;
 }
 
-function importgisdata(callbackFunc){
+function importgisdata(file_id, callbackFunc){
     $.ajax({
         url: apiURI+'importgisdata',
         type: "POST",
-        data: "csrfmiddlewaretoken="+csrftoken,
+        data: "csrfmiddlewaretoken="+csrftoken+"&file_id="+file_id,
         dataType: "JSON",
         success: function(response){
             r = response;
@@ -39,12 +39,34 @@ function importgisdata(callbackFunc){
     });
 }
 
-function getExcelDataFromMapping(mapping, callbackFunc){
+function loadExcelFiles(element){
+    $.ajax({
+        url: apiURI+'getexcelfiles',
+        type: 'GET',
+        dataType: 'JSON',
+        success: function(response){
+            r = response;
+            processResponse(r);
+        },
+        error: function(response){
+            console.log(error);
+        }
+    });
+    function processResponse(r){
+        $.each(r, function(i,v){
+            file_path = v.file_path.replace(/(.*\/)/g,"");
+            var html = "<option value="+v.id+">"+v.file_name+"("+file_path+")</option>";
+            element.append(html);
+        });
+    }
+}
+
+function getExcelDataFromMapping(file_id, data_group, mapping, callbackFunc){
     var mappingString = JSON.stringify(mapping);
     $.ajax({
         url: apiURI+'getexceldatafrommapping',
         type: 'POST',
-        data: 'csrfmiddlewaretoken='+csrftoken+"&mapping="+mappingString,
+        data: 'csrfmiddlewaretoken='+csrftoken+"&file_id="+file_id+"&data_group="+data_group+"&mapping="+mappingString,
         dataType: "JSON",
         success: function(response){
             r = response;
@@ -56,8 +78,35 @@ function getExcelDataFromMapping(mapping, callbackFunc){
         }
     });
 }
-function submitImporterData(data){
-    console.log("Submitting data...");
+function submitImporterData(data, data_group, callbackFunc){
+    $.each(data, function(i,v){
+        var row = "";
+        $.each(v, function(key, value){
+            row+="&"+key+"="+value;
+        });
+        submitData(row);
+    });
+    function submitData(row){
+        $.ajax({
+            url: apiURI + "addNewData",
+            type: "POST",
+            data: "csrfmiddlewaretoken="+csrftoken+"&data_group="+data_group+row,
+            dataType: "JSON",
+            success: function(response){
+                r = response;
+                processResponse(r);
+            },
+            error: function(response){
+                console.log("Error");
+                console.log(response);
+            }
+        });
+        function processResponse(r){
+            if(r.status=="success"){
+                callbackFunc(r.msg);
+            }
+        }   
+    }
 }
 function getGisData(callbackFunc){
     $.ajax({

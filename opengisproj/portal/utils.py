@@ -20,9 +20,14 @@ def install(user):
     temp = options.objects.create(option_name="meta_field",value='{"key_name": "year", "label": "Year", "key_type": "number", "min": "1947", "max": "2100", "max_len": "", "step": ""}', is_removable=False)
     temp.save()
 
-def get_meta_fields(getjson=False):
+def get_meta_fields(filterByGroup=None):
     try:
-        data = options.objects.filter(option_name="meta_field")
+        if(filterByGroup == None):
+            data = options.objects.filter(option_name="meta_field")
+        else:
+            filterByGroup = int(filterByGroup)
+            group = data_groups.objects.filter(id=filterByGroup)
+            data = options.objects.filter(option_name="meta_field", data_group=group)
         jsonFields = []
         for d in data:
             temp = {}
@@ -393,20 +398,23 @@ def get_shapes():
         return data
     except Exception as e:
         return str(e)
-def import_gis_data():
-    Location = os.getcwd() + '/portal/data1.xlsx'
+
+def import_gis_data(file_id):
+    file_id = int(file_id)
+    file_path = uploads.objects.filter(id=file_id)[0]
+    MEDIA_ROOT = settings.MEDIA_ROOT.replace('\\','/')+'/'
+    Location = MEDIA_ROOT+str(file_path.file_ref)
     df = pd.read_excel(Location, 0, index_col='Sl. No')
     excelFields = df.columns
     temp = []
     for x in excelFields:
         temp.append(x)
-    print(temp)
     return temp
 
-def get_excel_data_from_mapping(mapping):
-    mappingString = mapping['mapping']
+def get_excel_data_from_mapping(mapping, file_id, data_group):
+    mappingString = mapping
     mappingObjects = json.loads(mappingString)
-    metaFields = get_meta_fields()
+    metaFields = get_meta_fields(data_group)
 
     def get_meta_attributes(meta_key):
         for x in metaFields:
@@ -417,15 +425,14 @@ def get_excel_data_from_mapping(mapping):
                     attr[x] = obj[x]
                 return attr
         return False
-
     excelData = {}
     approved = []
     rejected = []
-    Location = os.getcwd() + '/portal/data1.xlsx'
+    file_path = uploads.objects.filter(id=file_id)[0]
+    MEDIA_ROOT = settings.MEDIA_ROOT.replace('\\','/')+'/'
+    Location = MEDIA_ROOT+str(file_path.file_ref)
     df = pd.read_excel(Location, 0, index_col='Sl. No')
     for row in df.itertuples():
-        print("Iterating new row!")
-        print(row)
         obj = {}
         flag = 0
         for x in mappingObjects:
@@ -439,25 +446,31 @@ def get_excel_data_from_mapping(mapping):
                 print("Key:"+attr['key_name']+" type:"+attr['key_type']+" max: "+attr['max'])
                 obj[attr['key_name']] = str(excel_val)
                 if attr['key_type'] == 'number':
-                    step = float(attr['step'])
-                    prec = int(len(str(step))- len(str(np.floor(step)))+1)
-                    excel_val = round(excel_val,prec)
-                    if float(excel_val) < float(attr['min']) or float(excel_val) > float(attr['max']):
-                        print("flag is 1")
-                        flag = 1
+                    if attr['step']!= '':
+                        step = float(attr['step'])
+                        prec = int(len(str(step))- len(str(np.floor(step)))+1)
+                        excel_val = round(excel_val,prec)
+                    if excel_val != '' and attr['min']!='' and attr['max']!='':
+                        if float(excel_val) < float(attr['min']) or float(excel_val) > float(attr['max']):
+                            flag = 1
                 elif attr['key_type'] == 'text' and attr['max_len'] != '':
                     if str(len(excel_val)) > int(attr['max_len']):
                         flag = 1
-        print("ROw created")
-        print(obj)
         if flag == 1:
-            print("REJECTED")
             rejected.append(obj)
         else:
-            print("APPROVED")
             approved.append(obj)
     excelData["approved"] = approved
     excelData["rejected"] = rejected
-    print("excelData")
-    print(excelData)
     return excelData
+
+def get_excel_files():
+    sheets = uploads.objects.filter(file_meta="excel_file")
+    data = []
+    for sheet in sheets:
+        obj = {}
+        obj['id'] = sheet.id
+        obj['file_name'] = sheet.file_name
+        obj['file_path'] = str(sheet.file_ref)
+        data.append(obj)
+    return data

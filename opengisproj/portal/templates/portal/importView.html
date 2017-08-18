@@ -34,17 +34,32 @@
 {% endblock %}
 
 {% block content %}
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary center-block">Upload</button>
-</form>
-
-   <div class="row width-inherit">
-        <h1 class="text-center">GIS Data Import</h1>
+    <div class="container">
+        <h3>Upload New File</h3>
+        {% include 'portal/partials/file-uploader.html' %}
+    </div>
+    <div class="container">
+        <h3>Read Existing file</h3>
+        <div class="from-group">
+            <label for="excelSheetSelector">Select a excel file</label>
+            <select id="excelSheetSelector" class="form-control" required>
+                <option></option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="importDataGroupSelector">Select a Data Group</label>
+            <select id="importDataGroupSelector" class="form-control" required>
+                <option></option>
+            </select>
+        </div>
+        <div class="form-group">
+            <button class="btn btn-md btn-primary" id="readExcelFileBtn">Read File</button>
+        </div>
+    </div>
+   <div class="row width-inherit hidden" id="mapGisParam">
         <div class="row">
             <div class="col-xs-12">
-                <h3 class="text-center">Check GIS Parameters</h3>
+                <h3 class="text-center">Map GIS Parameters</h3>
             </div>
             <div class="container">
                 <div class="col-xs-12">
@@ -57,15 +72,25 @@
                 </div>
             </div>
         </div>
+   </div>
+    <section class="hidden" id="importTable">
         <div class="row">
             <div class="container">
-                <h3 class="text-center loading-text">Data to be stored</h3>
-                <h4 class="text-center text-danger table-error"></h4>
+                <h3 class="text-center loading-text">Data that will be stored</h3>
                 <table id="gisImportTable"></table>
-                <button type="submit" class="btn btn-large btn-primay center-block" id="submitImporterDataBtn">Start Import</button>
             </div>
         </div>
-    </div>
+        <div class="row">
+            <div class="container">
+                <h3 class="text-center loading-text">Data that will not be stored</h3>
+                <table id="gisImportTableRejected"></table>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-large btn-primay center-block" id="submitImporterDataBtn">Start Import</button>
+        <div class="progress" id="importProgress">
+            <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="0" style="width:0%"></div>
+        </div>
+    </section>
 {% endblock %}
 
 {% block js %}
@@ -79,11 +104,48 @@
             var excelFields = [];
             var CheckGroup = $(".Check-group");
             var is_excel_field_loaded = false;
-            //getmetafields(storeData);
+            var excelSheetSelector = $("#excelSheetSelector");
+            var readExcelFileBtn = $("#readExcelFileBtn");
+            var importDataGroupSelector = $("#importDataGroupSelector");
             function init(){
-                importgisdata(excelField_generate);
-                key_name_generate();
+                $("#id_file_meta").val("excel_file");
+                $("#id_file_meta").keydown(function(e){
+                    e.preventDefault();
+                });
+                loadDataGroupSelector(importDataGroupSelector);
+                loadExcelFiles(excelSheetSelector);
             }
+            readExcelFileBtn.click(function(e){
+                e.preventDefault();
+                if(excelSheetSelector.val() == ""){
+                    excelSheetSelector.tooltip({
+                        title: "Please select a file",
+                        trigger: "manual",
+                        placement: "bottom",
+                    });
+                    excelSheetSelector.tooltip("show");
+                    return false;
+                }{
+                    excelSheetSelector.tooltip("hide");
+                }
+                if(importDataGroupSelector.val() == ""){
+                    importDataGroupSelector.tooltip({
+                        title: "Please select a file",
+                        trigger: "manual",
+                        placement: "bottom",
+                    });
+                    importDataGroupSelector.tooltip("show");
+                    return false;
+                }else{
+                    importDataGroupSelector.tooltip("hide");
+                }
+                excelSheetSelector.attr("disabled","disabled");
+                importDataGroupSelector.attr("disabled","disabled");
+                $(this).attr("disabled","disabled");
+                $(this).html("Processing");
+                importgisdata(excelSheetSelector.val(), excelField_generate);
+                key_name_generate();
+            });
             function excelField_generate(excel_data){
                 excelFields = excel_data;
                 is_excel_field_loaded = true;
@@ -92,18 +154,19 @@
                 var timer = setInterval(function(){
                     if(is_excel_field_loaded == true && gis_meta_fields_stored == true){
                         clearInterval(timer);
-                        console.log(gisMetaFields);
+                        filtered_fields = filterGisParametersByGroup(importDataGroupSelector.val());
                         var html;
-                        for (var x in gisMetaFields){
-                            console.log("I am fucking!!!");
-                            html = '<label for="key_name">'+gisMetaFields[x].label+' (required)</label>';
-                            html += '<select class="form-control keyMapping" name="'+gisMetaFields[x].key_name+'" id="'+gisMetaFields[x].key_name+'" class="check_name" data-db-key="'+gisMetaFields[x].key_name+'" required>';
+                        for (var x in filtered_fields){
+                            html = '<label for="key_name">'+filtered_fields[x].label+' (required)</label>';
+                            html += '<select class="form-control keyMapping" name="'+filtered_fields[x].key_name+'" id="'+filtered_fields[x].key_name+'" class="check_name" data-db-key="'+filtered_fields[x].key_name+'" required>';
                             for (var y in excelFields){
                                 html += '<option value="'+excelFields[y]+'">'+excelFields[y]+'</option>';
                             }
                             html += '</select>';
                             CheckGroup.append(html);
                         }
+                        $("#mapGisParam").removeClass("hidden");
+                        readExcelFileBtn.fadeOut();
                     }
                 }, 200);   
             }
@@ -111,15 +174,19 @@
                 e.preventDefault();
                 var mapping = [];
                 CheckGroup.find(".keyMapping").each(function(e){
+                    $(this).attr("disabled","disabled");
                     var obj = {};
                     obj["db_key"] = $(this).attr("data-db-key");
                     obj["excel_key"] = $(this).val();
                     mapping.push(obj);
                 });
-                getExcelDataFromMapping(mapping, readExcelData);
+                var file_id = excelSheetSelector.val();
+                var data_group = importDataGroupSelector.val();
+                submitBtn.attr("disabled","disabled");
+                submitBtn.html("Processing");
+                getExcelDataFromMapping(file_id, data_group, mapping, readExcelData);
             });
             function readExcelData(data){
-                console.log(data);
                 $.each(data.approved, function(i,v){
                     var html = "<tr>";
                     if (i==0){
@@ -139,9 +206,45 @@
                     html += '</tr>';
                     $("#gisImportTable").append(html);
                 });
-            //    $("#submitImporterDataBtn").fadeIn();
+                $.each(data.rejected, function(i,v){
+                    var html = "<tr>";
+                    if (i==0){
+                        html += '<th class="col-sm-1">Sl. No.</th>';
+                    }
+                    else{
+                        html += '<td class="col-sm-1">'+i+'</td>';
+                    }
+                    $.each(v, function(key,value){
+                        if (i==0){
+                            html += '<th class="col-sm-2">'+key+'</th>';
+                        }
+                        else{
+                        html += '<td class="col-sm-2">'+value+'</td>';
+                        }
+                    });
+                    html += '</tr>';
+                    $("#gisImportTableRejected").append(html);
+                    submitBtn.fadeOut();
+                    $("#importTable").removeClass("hidden");
+                });
                 $("#submitImporterDataBtn").click(function(e){
-                    submitImporterData(data.approved);
+                    e.preventDefault();
+                    $(this).fadeOut();
+                    $("#importProgress").removeClass("hidden");
+                    var total = data.approved.length;
+                    var counter = 0;
+                    submitImporterData(data.approved, importDataGroupSelector.val(), updateProgress);
+                    function updateProgress(){
+                        counter++;
+                        var progress = counter*100/total;
+                        $("#importProgress .progress-bar").css('width',progress+"%");
+                        if(counter == total){
+                            setTimeout(function(){
+                                alert("Imported Successfully!");
+                                location.reload();
+                            },500);
+                        }
+                    }
                 });        
             }
                 init();
