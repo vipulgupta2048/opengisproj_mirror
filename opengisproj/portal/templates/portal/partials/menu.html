@@ -1,43 +1,40 @@
 <style>
-.dropdown{
-  padding: 20px;
-  color:#777;
-}
-.dropdown:hover{
-  color: #333;
-}
-.navbar{
-	background-color: rgba(255,255,255,0.9);
-	z-index: 999;
-  box-shadow: 0 0 14px 1px #7b7b7b;;
-  height: 64px;
-  font-size: 18px;
-  margin-bottom: 2px;
-}
-.navbar-brand{
-  margin: 0!important;
-  font-size: 1.5em;
-}
-.navbar a{
-  padding: 20px!important;
-  line-height: 25px!important;
-}
-.dropdown{
-  padding: 0;
-  margin: 0;
-}
-.dataDropdown-toggle{
-  height: 65px;
-  padding: 20px!important;
-  line-height: 25px!important;
-}
-.listHeader{
-  margin: 10px;
-}
-.listElement a{
-  padding: 10px!important;
-  margin: 0!important;
-}
+    .dropdown{
+        padding: 20px;
+        color:#333;
+    }
+    .navbar{
+        background-color: rgba(255,255,255,0.9);
+        z-index: 999;
+        box-shadow: 0 0 14px 1px #7b7b7b;;
+        height: 64px;
+        font-size: 18px;
+        margin-bottom: 2px;
+    }   
+    .navbar-brand{
+        margin: 0!important;
+        font-size: 1.5em;
+    }
+    .navbar a{
+        padding: 20px!important;
+        line-height: 25px!important;
+    }
+    .dropdown{
+        padding: 0;
+        margin: 0;
+    }
+    .dataDropdown-toggle{
+        height: 65px;
+        padding: 20px!important;
+        line-height: 25px!important;
+    }
+    .listHeader{
+        margin: 10px;
+    }
+    .listElement a{
+        padding: 10px!important;
+        margin: 0!important;
+    }
 </style>
 <div class="navbar navbar-default">
     <div class="container-fluid">
@@ -53,14 +50,11 @@
         <div class="collapse navbar-collapse" id="mainNav">
             <ul class="nav navbar-nav">
                 <li class="dropdown">
-                    <a href="#" id='dataDropdown-toggle' class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Data Tools<span class="caret"></span></a>
-                    <ul class="dropdown-menu padding-20-">
+                    <a href="#" id='dataDropdown-toggle' class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Data Management<span class="caret"></span></a>
+                    <ul class="dropdown-menu padding-20">
                         <li class="listHeader"><strong>GIS Data</strong></li>
                         <li class="listElement"><a href="/portal/add">Add Data</a></li>
                         <li class="listElement"><a href="/portal/browse">Browse Table</a></li>
-                        <li role="separator" class="divider"></li>
-                        <li class="listHeader"><strong>Import GIS Data</strong></li>
-                        <li class="listElement"><a href="/portal/importView">Import View</a></li>
                         <li role="separator" class="divider"></li>
                         <li class="listHeader"><strong>GIS Parameters</strong></li>
                         <li class="listElement"><a href="/portal/parameters">Add/Browse Parameters</a></li>
@@ -70,6 +64,14 @@
                         <li role="separator" class="divider"></li>
                         <li class="listHeader"><strong>Shapefiles</strong></li>
                         <li class="listElement"><a href="/portal/shapefiles">Browse/Create Shapes</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" id='dataDropdown-toggle' class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        Data Tools<span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu padding-20">
+                       <li class="listElement"><a href="/portal/importer">Import GIS Data</a></li>
                     </ul>
                 </li>
                 <li><a href="/portal/reports">Reports</a></li>

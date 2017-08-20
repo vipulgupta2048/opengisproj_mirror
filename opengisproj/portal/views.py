@@ -4,47 +4,39 @@ from .utils import *
 from .forms import UploadForm
 # Create your views here.
 
-
-def demo(request):
-    install(user=request.user)
-    return HttpResponse("OK")
-
-
 def home(request):
-    if request.user.is_authenticated is True:
-        f = get_meta_fields()
-        return render(request, 'portal/index.html', {'meta_fields': f})
-    else:
+    if request.user.is_authenticated == False:
         return redirect('/account/login?next=/portal/home')
-
+    f = get_meta_fields()
+    return render(request, 'portal/index.html', {'meta_fields': f})
 
 def add(request):
-    if request.user.is_authenticated is False:
+    if request.user.is_authenticated == False:
         return redirect('/account/login?next=/portal/add')
     f = get_meta_fields()
     return render(request, 'portal/add-new.html', {'meta_fields': f})
 
 
 def browse(request):
-    if request.user.is_authenticated is False:
+    if request.user.is_authenticated == False:
         return redirect('/account/login?next=/portal/browse')
     return render(request, 'portal/browse.html')
 
 
 def addParam(request):
-    if request.user.is_authenticated is False:
+    if request.user.is_authenticated == False:
         return redirect('/account/login?next=/portal/parameters')
     return render(request, 'portal/add-param.html')
 
 
 def dataGroups(request):
-    if request.user.is_authenticated is False:
+    if request.user.is_authenticated == False:
         return redirect('/account/login?next=/portal/datagroups')
     return render(request, 'portal/data-groups.html')
 
 
 def reports(request):
-    if request.user.is_authenticated is False:
+    if request.user.is_authenticated == False:
         return redirect('/account/login?next=/portal/reports')
     return render(request, 'portal/reports.html')
 def shapefilesManager(request):
@@ -68,7 +60,7 @@ def importView(request):
     form = UploadForm()
     return render(request, 'portal/importView.html', {'form':form})
 def processAjax(request, action):
-    if request.user.is_authenticated is False:
+    if request.user.is_authenticated == False:
         return JsonResponse("Unauthenticated Request", safe=False)
     if action == 'getmetafields':
         res = get_meta_fields()
