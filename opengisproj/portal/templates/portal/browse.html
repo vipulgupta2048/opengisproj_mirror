@@ -35,27 +35,21 @@
                 -webkit-transform: translate(171px, 79px); /* Safari */
                 transform: translate(171px, 79px);
                 visibility: hidden;
-                }
             }
-            #customParameterButton{
-                margin-right: 5px;
-            }
-            #mainContainer{
-                transform: translate(0, -50px);
-            }
-            .fixed-table-pagination{
-                background-color: white;
-            }
-            .fixed-table-container{
-                margin-bottom: 100px;
-            }
-            #dataGroupSection{
-                visibility: hidden;
-            }
-            #loading{
-                font-weight: 600;
-                font-size: 37px;
-            }
+        }
+        #customParameterButton{
+            margin-right: 5px;
+        }
+        .fixed-table-pagination{
+            background-color: white;
+        }
+        .fixed-table-container{
+            margin-bottom: 100px;
+        }
+        #loading{
+            font-weight: 600;
+            font-size: 37px;
+        }
     </style>
 {% endblock %}
 
@@ -65,7 +59,7 @@
       </div>
         <div id="dataGroupSection" class="form-group container">
             <label>Select Data Group</label>
-            <select class="gisDataGroupSelect form-control"></select>
+            <select class="gisDataGroupSelect form-control" data-updateTable="true"></select>
         </div>
         <h3 id="loading" class="text-center loading-text">Loading Table...</h3>
         <div id='mainContainer' class="container">
@@ -79,11 +73,9 @@
     <script>
         var customAddButton = document.getElementById("customAddButton");//Variable used in displayBtns()
         var customParameterButton = document.getElementById("customParameterButton");//Variable used in displayBtns()
-        var dataGroupSection = document.getElementById("dataGroupSection");//Variable used in displayBtns()
         function displayBtns(){
           customAddButton.style.visibility = "visible";
           customParameterButton.style.visibility = "visible";
-          dataGroupSection.style.visibility = "visible";
         }
         $(document).on("gisDataLoaded", function(){
           displayBtns(); //Displays the additional buttons.

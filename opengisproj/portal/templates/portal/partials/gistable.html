@@ -17,8 +17,9 @@
                         loadDataGroupSelector(dataGroupSelect);
                     }
                     dataGroupSelect.on("change", function(){
-                        if($(this).attr("data-updateTable") == "false" || $(this).attr("data-updateTable") != undefined)
+                        if($(this).attr("data-updateTable") == "false" || $(this).attr("data-updateTable") == undefined){
                             return false;
+                        }
                         // Bind Data Group Selector with change event, filters table according to group id
                         var g_id = $(this).val();   //get Group ID
                         var data_filtered = filterGisDataByGroup(g_id);  //filter data by ID
