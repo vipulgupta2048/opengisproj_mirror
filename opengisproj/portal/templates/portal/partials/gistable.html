@@ -5,7 +5,7 @@
         var isTableEditable = gisTable.attr("data-is-editable");    //Check if it is editable
         var dataGroupSelect = $(".gisDataGroupSelect");    //Select Groups Container
         var columns = [], meta_loaded = false;    //columns[] stores parameters, meta_loaded stores Columns status(true/false)
-
+        var deleteRowsBtn = $("#deleteRowsBtn");
         function loadGisDataTable(table){
             generateTableColumns();     //Create Table Columns in BootstrapTable Format
 
@@ -34,6 +34,7 @@
                             }
                         },200);
                     });
+                    $(document).trigger("gisDataLoaded");
                 }, 200);
             }
             var tableLoadedTimer = setInterval(function(){
@@ -45,13 +46,46 @@
                     filteredData = filterGisDataByGroup(dataGroupSelect.val());
                     var tableOptions = {columns: columns, data: filteredData, idField: "id", uniqueId: "id",
                         clickToSelect: true, pagination: true, pageSize: 10, search: true, showColumns: true,
-                        showToggle: true, singleSelect: true, onDblClickCell: editCellData};
+                        showToggle: true, singleSelect: false, onDblClickCell: editCellData, onCheckAll:rowsChecked, 
+                        onUncheckAll: rowsChecked, onCheck : rowsChecked, onUncheck: rowsChecked };
                     table.bootstrapTable(tableOptions);    //Initialize Table
                     table.bootstrapTable('hideLoading');    //hide loading status from table
                     gisTable = table;   //Update GisTable Variable
                     bindGisDataRemove();    //Enable the Remove Row Buttons
                     $(".loading-text").hide();  //Hide Loading Table
                     $(document).trigger("gisTableLoaded");
+                    if(deleteRowsBtn!=undefined){
+                        deleteRowsBtn.on("click",function(e){
+                            e.preventDefault();
+                            var cnfrm = confirm("Delete "+$(this).find(".counter").html()+" entries?");
+                            if(cnfrm){
+                                deleteRowsBtn.attr("disabled","disabled");
+                                var rows = gisTable.bootstrapTable('getSelections');
+                                var totalRows = rows.length;
+                                var rowsProcessed = 0;
+                                if(totalRows>0){
+                                    $.each(rows, function(i,v){
+                                        var rowId = v.id;
+                                        deleteGisDataById(rowId, processResponse);
+                                        function processResponse(r){
+                                            if(r.status == "success"){
+                                                rowsProcessed++;
+                                                gisTable.bootstrapTable('removeByUniqueId',rowId);
+                                                if(rowsProcessed == totalRows){
+                                                    alert(rowsProcessed+" rows were deleted!");
+                                                    deleteRowsBtn.find(".counter").html("");
+                                                    deleteRowsBtn.removeAttr("disabled");
+                                                    if(gisTable.bootstrapTable('getSelections').length == 0)
+                                                        deleteRowsBtn.fadeOut();
+                                                }
+                                            }
+                                        }
+                                    });
+                                }
+                                
+                            }
+                        });
+                    }
                 }
             },3000);
         }
@@ -82,8 +116,16 @@
                     return html;
                 }
                 meta_loaded = true;
-                console.log(columns);
             }, 200);
+        }
+        function rowsChecked(rows){
+            var selectedRows = gisTable.bootstrapTable('getSelections');
+            if(selectedRows.length == 0){
+                deleteRowsBtn.fadeOut();
+                return false;
+            }
+            deleteRowsBtn.find(".counter").html(selectedRows.length);
+            deleteRowsBtn.fadeIn(); 
         }
         function editCellData(field, value, row, element){
             /** Converts the Data Table's <td> to <input> to allow data to be modified and store in database
@@ -199,26 +241,18 @@
                 removeGisData($(this).parents("tr"));
             });
         }
-        function removeGisData(row){
+        function removeGisData(row, cnfrm = true){
             /** Removes Row from Database **/
             $(".gisDataRemoveBtn").off("click"); //Disable Remove Button
             var id = row.attr("data-uniqueid"); //Get ID of the row
-            var r = confirm("This will delete all data associated with id #"+id);   //Confirm with user
+            var r;
+            if(cnfrm)
+                r = confirm("This will delete all data associated with id #"+id);   //Confirm with user
+            else
+                r = true;
             if(r == true){
                 // on User Confirmation
-                $.ajax({
-                    url: apiURI + 'removedata',
-                    data: "id="+id+"&csrfmiddlewaretoken="+'{{ csrf_token }}',
-                    dataType: "JSON",
-                    method: "POST",
-                    success: function(response){
-                        r = response;
-                        processResponse(r);
-                    },
-                    error: function(response){
-                        console.log(response);
-                    }
-                });
+                deleteGisDataById(id, processResponse);
             }else{
                 bindGisDataRemove();
             }

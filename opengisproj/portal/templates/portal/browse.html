@@ -62,24 +62,12 @@
             <select class="gisDataGroupSelect form-control" data-updateTable="true"></select>
         </div>
         <h3 id="loading" class="text-center loading-text">Loading Table...</h3>
-        <div id='mainContainer' class="container">
-            <a id="customAddButton" class="button btn btn-default" href="/portal/add">Add Data</button></a><br>
-            <a id="customParameterButton" href="/portal/parameters" class="btn btn-default button">Edit Table Parameters</a>
+        <div id='mainContainer' class="container" style="position:relative">
+            <a id="deleteRowsBtn" class="btn btn-danger button" href="#" style="position:absolute; top:0; display:none;"><span class="glyphicon glyphicon-remove"></span> Delete (<span class="counter"></span>) </a>
             <table id="gisDataTable" data-is-editable = "true"></table>
         </div>
 {% endblock %}
 
 {% block js %}
-    <script>
-        var customAddButton = document.getElementById("customAddButton");//Variable used in displayBtns()
-        var customParameterButton = document.getElementById("customParameterButton");//Variable used in displayBtns()
-        function displayBtns(){
-          customAddButton.style.visibility = "visible";
-          customParameterButton.style.visibility = "visible";
-        }
-        $(document).on("gisDataLoaded", function(){
-          displayBtns(); //Displays the additional buttons.
-        });
-    </script>
     {% include 'portal/partials/gistable.html' %}
 {% endblock %}

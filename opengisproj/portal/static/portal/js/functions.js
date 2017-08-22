@@ -39,6 +39,22 @@ function importgisdata(file_id, callbackFunc){
     });
 }
 
+function deleteGisDataById(id, callbackFunc){
+    $.ajax({
+        url: apiURI + 'removedata',
+        data: "id="+id+"&csrfmiddlewaretoken="+csrftoken,
+        dataType: "JSON",
+        method: "POST",
+        success: function(response){
+            r = response;
+            callbackFunc(r);
+        },
+        error: function(response){
+            console.log(response);
+        }
+    });
+}
+
 function loadExcelFiles(element){
     $.ajax({
         url: apiURI+'getexcelfiles',
