@@ -56,36 +56,40 @@
                     $(document).trigger("gisTableLoaded");
                     if(deleteRowsBtn!=undefined){
                         deleteRowsBtn.on("click",function(e){
+                            //Bind Click event to bulk Data Delete BTN
                             e.preventDefault();
+                            // Confirm User
                             var cnfrm = confirm("Delete "+$(this).find(".counter").html()+" entries?");
                             if(cnfrm){
-                                deleteRowsBtn.attr("disabled","disabled");
-                                var rows = gisTable.bootstrapTable('getSelections');
-                                var totalRows = rows.length;
-                                var rowsProcessed = 0;
+                                deleteRowsBtn.attr("disabled","disabled");  //Disable the btn
+                                var rows = gisTable.bootstrapTable('getSelections');    //Get Selected Rows
+                                var totalRows = rows.length;    //Count total rows
+                                var rowsProcessed = 0;  //Calculate Rows Processed
                                 if(totalRows>0){
+                                    // If Number of Rows
                                     $.each(rows, function(i,v){
-                                        var rowId = v.id;
-                                        deleteGisDataById(rowId, processResponse);
+                                        //Iterate Through rows
+                                        var rowId = v.id;   //Get Row Id
+                                        deleteGisDataById(rowId, processResponse); //Submit Delete Job
                                         function processResponse(r){
                                             if(r.status == "success"){
-                                                rowsProcessed++;
-                                                gisTable.bootstrapTable('removeByUniqueId',rowId);
+                                                rowsProcessed++;    //Update Rows Processes
+                                                gisTable.bootstrapTable('removeByUniqueId',rowId);    //Remove Rows from Table
                                                 if(rowsProcessed == totalRows){
+                                                    //If all rows were processed
                                                     alert(rowsProcessed+" rows were deleted!");
-                                                    deleteRowsBtn.find(".counter").html("");
-                                                    deleteRowsBtn.removeAttr("disabled");
+                                                    deleteRowsBtn.find(".counter").html(""); //Reset HTML
+                                                    deleteRowsBtn.removeAttr("disabled"); //Reset Btn
                                                     if(gisTable.bootstrapTable('getSelections').length == 0)
-                                                        deleteRowsBtn.fadeOut();
-                                                }
-                                            }
-                                        }
-                                    });
-                                }
-                                
-                            }
-                        });
-                    }
+                                                        deleteRowsBtn.fadeOut(); //Hide btn
+                                                }//End If
+                                            }// End Success
+                                        } //End processResponse()
+                                    });// end rows loop
+                                }//end if
+                            }// end cnfrm
+                        });// End Click Bind
+                    }//end btn!=undefined
                 }
             },3000);
         }
