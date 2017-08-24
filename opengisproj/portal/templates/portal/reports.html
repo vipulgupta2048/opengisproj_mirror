@@ -171,7 +171,7 @@
                 getShapefileCoords($(this).val(), plotMapShapeData);
         });
     }
-    // Plotting shapefile, customiser
+    // Plotting shapefile, customiser of the shapefile 
     function plotMapShapeData(data){
         $.each(data,function(i,v){
             var shapeData = v;
@@ -211,6 +211,10 @@
             var marker = new google.maps.Marker({
                 position: coord,
                 map: map,
+                icon: {url:"https://mts.googleapis.com/vt/icon/name=icons/spotlight/spotlight-waypoint-b.png&color=ff333333&ax=44&ay=48&scale=1 //--", scaledSize: new google.maps.Size(35,60),
+				origin: new google.maps.Point(0,-11),    // origin
+				anchor: new google.maps.Point(0,0)       // scaled size 
+				}, 
                 title: v.sample_identifier,
                 label: v.id
             });
@@ -273,7 +277,7 @@
         if(isFound)
             gisModal.modal();   //Show Modal
         else
-            return false;   // Return false on ID NOT FOUND
+            return false;   	// Return false on ID NOT FOUND
     }
     $("#gisFilterSubmitBtn").click(function(e){
         // Click Event Handler for Filter Submit Button 
@@ -285,9 +289,9 @@
              alert("Please select a Data Group!");
              return false;
          }
-         var gisFilterKey = $("#gisFilterParameterKey");    //Select Filter Key
+         var gisFilterKey = $("#gisFilterParameterKey");    			//Select Filter Key
          var gisFilterCondition = $("#gisFilterParameterCondition");    //Select Filter Condition
-         var gisFilterValue = $("#gisFilterParameterValue");    //Select Filter Value
+         var gisFilterValue = $("#gisFilterParameterValue");    		//Select Filter Value
          var filteredArray = filterGisData(gisFilterKey.val(), gisFilterValue.val(), gisFilterCondition.val(), gisFilterGroup.val());  //Filter Data
          generateTableColumns();
          var timer = setInterval(function(){
@@ -356,9 +360,3 @@
 </script>
 {% include 'portal/partials/gistable.html' %}
 {% endblock %}
-
-someone out of us 4, have fucked with the show map function by changing all values and inserting 2 zoom elements 
-WHy do we need current coordinates of the user 
-Markers - either the image changes or the marker get bigger whate ever be the case we have both solutions to go over.
-
-
