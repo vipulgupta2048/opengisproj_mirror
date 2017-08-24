@@ -406,13 +406,13 @@
                 errorBox.hide();
                 var data = form.serialize();
                 submitBtn.html("Processing");
+                submitBtn.attr("disabled","disabled");
                 $.ajax({
                     url: apiURI + "addnewparam",
                     type: "POST",
                     data: data,
                     dataType: "JSON",
                     success: function(response){
-                        console.log(response);
                         r = response;
                         processResponse(r);
                     },
@@ -450,6 +450,7 @@
                             setTimeout(function(){submitBtn.html("Add");},2000);
                         }
                     }
+                    submitBtn.removeAttr("disabled");
                 }
             });
             function resetForm(){
