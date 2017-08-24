@@ -211,14 +211,16 @@
             var marker = new google.maps.Marker({
                 position: coord,
                 map: map,
-                icon: {url:"https://mts.googleapis.com/vt/icon/name=icons/spotlight/spotlight-waypoint-b.png&color=ff333333&ax=44&ay=48&scale=1 //--", scaledSize: new google.maps.Size(35,60),
-				origin: new google.maps.Point(0,-11),    // origin
-				anchor: new google.maps.Point(0,0)       // scaled size 
-				}, 
+                icon: {url:"https://mts.googleapis.com/vt/icon/name=icons/spotlight/spotlight-waypoint-b.png&scale=1 //--", 
+				scaledSize: new google.maps.Size(35,60),   // size of the marker
+				origin: new google.maps.Point(0,-10),      // origin of the marker text
+				},
+                animation: google.maps.Animation.DROP,
+                draggable: false,
                 title: v.sample_identifier,
                 label: v.id
             });
-            marker.addListener('click', function() {
+			marker.addListener('click', function() {
                 // Marker Click Event Listener 
                 showGisDetails(v.id);   // Show GIS Details Marker Details
             });
