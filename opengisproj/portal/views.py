@@ -6,10 +6,11 @@ from .forms import UploadForm
 
 def home(request):
     if request.user.is_authenticated == False:
-        return redirect('/account/login?next=/portal/home')
-    f = get_meta_fields()
-    return render(request, 'portal/index.html', {'meta_fields': f})
-
+        return redirect('/portal/reports')
+    elif request.user.is_staff == True:
+        f = get_meta_fields()
+        return render(request, 'portal/index.html', {'meta_fields': f})
+        
 def add(request):
     if request.user.is_authenticated == False:
         return redirect('/account/login?next=/portal/add')
@@ -36,9 +37,8 @@ def dataGroups(request):
 
 
 def reports(request):
-    if request.user.is_authenticated == False:
-        return redirect('/account/login?next=/portal/reports')
     return render(request, 'portal/reports.html')
+
 def shapefilesManager(request):
     if request.user.is_authenticated == False:
         return redirect('/accounts/login?next=/portal/shapefiles')
@@ -60,7 +60,8 @@ def importView(request):
     form = UploadForm()
     return render(request, 'portal/importView.html', {'form':form})
 def processAjax(request, action):
-    if request.user.is_authenticated == False:
+    action_ignore_auth = ['getmetafields','getgisdata','getdatagroups','getshapes','getshapefilecoord']
+    if request.user.is_authenticated == False and action not in action_ignore_auth:
         return JsonResponse("Unauthenticated Request", safe=False)
     if action == 'getmetafields':
         res = get_meta_fields()
