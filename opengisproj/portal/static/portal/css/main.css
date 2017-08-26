@@ -53,19 +53,3 @@ body{
 #map {
     height: 100%;
 }
-/* Optional: Makes the sample page fill the window. */
-/* Display the control once it is inside the map. */
-#map .map-control {
-    background-color: #fff;
-    border: 1px solid #ccc;
-    box-shadow: 0 2px 2px rgba(33, 33, 33, 0.4);
-    font-family: 'Roboto','sans-serif';
-    margin: 10px;
-    padding-right: 5px;
-    display: block;
-}
-#map .selector-control {
-    font-size: 14px;
-    line-height: 30px;
-    vertical-align: baseline;
-}
