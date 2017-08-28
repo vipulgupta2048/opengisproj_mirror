@@ -410,6 +410,7 @@ def import_gis_data(file_id):
         temp = []
         for x in excelFields:
             temp.append(x)
+        temp.append("None")
         return temp
     except Exception as e:
         return str(e)
@@ -419,37 +420,51 @@ def get_excel_data_from_mapping(mapping, file_id, data_group):
         mappingString = mapping
         mappingObjects = json.loads(mappingString)
         metaFields = get_meta_fields(data_group)
+    
+    except Exception as e:
+        return {"status":"Error", "msg": str(e)}
 
-        def get_meta_attributes(meta_key):
-            for x in metaFields:
-                obj = x
-                if obj['key_name'] == meta_key:
-                    attr = {}
-                    for x in obj:
-                        attr[x] = obj[x]
-                    return attr
-            return False
-        excelData = {}
-        approved = []
-        rejected = []
+    def get_meta_attributes(meta_key):
+        for x in metaFields:
+            obj = x
+            if obj['key_name'] == meta_key:
+                attr = {}
+                for x in obj:
+                    attr[x] = obj[x]
+                return attr
+        return False
+    excelData = {}
+    approved = []
+    rejected = []
+    try:
         file_path = uploads.objects.filter(id=file_id)[0]
         MEDIA_ROOT = settings.MEDIA_ROOT.replace('\\','/')+'/'
         Location = MEDIA_ROOT+str(file_path.file_ref)
         df = pd.read_excel(Location, 0, index_col='Sl. No')
-        for row in df.itertuples():
-            obj = {}
-            flag = 0
-            for x in mappingObjects:
-                db_key = x['db_key']    #select current db key from array
-                excel_key = x['excel_key']
-                df.rename(columns={excel_key : db_key}, inplace=True)
-                attr = get_meta_attributes(db_key) #Get it's attributes array of db_key
-                excel_header = db_key
-                excel_val = df.ix[row.Index][db_key]
-                if attr['key_name'] == db_key:
-                    print("Key:"+attr['key_name']+" type:"+attr['key_type']+" max: "+attr['max'])
-                    obj[attr['key_name']] = str(excel_val)
+    except Exception as e:
+        return {"status":"Error", "msg": str(e)}
+    for row in df.itertuples():
+        obj = {}
+        flag = 0
+        for x in mappingObjects:
+            db_key = x['db_key']    #select current db key from array
+            excel_key = x['excel_key']
+            attr = get_meta_attributes(db_key) #Get it's attributes array of db_key
+            if excel_key == "None" and attr['required'].lower() == "true":
+                flag = 1
+                continue
+            elif excel_key == "None":    
+                continue
+            excel_header = db_key
+            try:
+                excel_val = df.loc[row.Index][excel_key]
+            except Exception as e:
+                return {"status":"Error", "msg": str(e)}
+            if attr['key_name'] == db_key:
+                obj[attr['key_name']] = str(excel_val)
+                try:
                     if attr['key_type'] == 'number':
+                        val = float(excel_val)
                         if attr['step']!= '':
                             step = float(attr['step'])
                             prec = int(len(str(step))- len(str(np.floor(step)))+1)
@@ -460,15 +475,15 @@ def get_excel_data_from_mapping(mapping, file_id, data_group):
                     elif attr['key_type'] == 'text' and attr['max_len'] != '':
                         if str(len(excel_val)) > int(attr['max_len']):
                             flag = 1
-            if flag == 1:
-                rejected.append(obj)
-            else:
-                approved.append(obj)
-        excelData["approved"] = approved
-        excelData["rejected"] = rejected
-        return excelData
-    except Exception as e:
-        return str(e)
+                except Exception as e:
+                    flag = 1
+        if flag == 1:
+            rejected.append(obj)
+        else:
+            approved.append(obj)
+    excelData["approved"] = approved
+    excelData["rejected"] = rejected
+    return excelData
 
 def get_excel_files():
     try:
