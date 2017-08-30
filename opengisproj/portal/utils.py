@@ -1,9 +1,8 @@
 import logging
-import os
+import os, errno
 from .models import *
 import json
 import shapefile
-import os
 from django.conf import settings
 import numpy as np
 import pandas as pd
@@ -498,3 +497,42 @@ def get_excel_files():
         return data
     except Exception as e:
         return str(e)
+
+def get_uploaded_files():
+    try:
+        files = uploads.objects.all()
+        data = []
+        for f in files:
+            obj = {}
+            obj['id'] = f.id
+            obj['file_name'] = f.file_name
+            obj['file_desc'] = f.description
+            obj['file_ref'] = str(f.file_ref)
+            obj['uploaded_at'] = str(f.uploaded_at)
+            obj['type'] = f.file_meta
+            data.append(obj)
+        return data
+    except Exception as e:
+        return "Error:" + str(e)
+
+def remove_uploaded_file(file_id):
+    try:
+        file_id = int(file_id)
+        try:
+            u_file = uploads.objects.get(id = file_id)
+        except DoesNotExist as e:
+            return {'status':'error', 'msg':'File Not Found','errcode':'FILE_NOT_FOUND'}
+        MEDIA_ROOT = settings.MEDIA_ROOT.replace('\\','/')+'/'
+        Location = MEDIA_ROOT+str(u_file.file_ref)
+        try:
+            os.remove(Location)
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                u_file.delete()
+                return {"status": "success"}
+            else:
+                raise
+        u_file.delete()
+        return {"status": "success"}
+    except Exception as e:  
+        return {"status":'error', "msg":str(e)}

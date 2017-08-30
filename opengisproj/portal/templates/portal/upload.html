@@ -1,6 +1,112 @@
 {% extends 'portal/base.html' %}
+{% load static %}
 {% block title %}Upload Manager{% endblock %}
-
 {% block content %}
-    {{ msg }}
+    <div class="container">
+        {% if msg %}
+            <div class="alert alert-info">{{ msg }}</div>
+        {% endif %}
+        <div class="row">
+            <table id="uploads" data-is-editable="true"></table>
+        </div>
+        {% include 'portal/partials/file-uploader.html' %}
+    </div>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'portal/js/bootstrap-table.min.js' %}"></script>
+<script>
+    $(document).ready(function(e){
+        var apiURI = '/portal/ajax/';
+        var uploadsTable = $("#uploads");
+        var uploadsColumns = [
+            {field: 'state', checkbox: true, align: 'center'},{field: "id", title: "Id" },
+            {field: "file_name", title: "File Label", sortable: true }, 
+            {field: "file_desc", title: "Description", sortable: true},
+            {field: "file_ref", title: "Physical Address", sortable: true},
+            {field: "uploaded_at", title: "DateTime of Upload", sortable: true},
+            {field: "type", title: "Upload Type", sortable: true},
+            {field: 'action', title: 'Actions', align: 'center', formatter: actionFormatter}
+        ];
+        function actionFormatter(value, row, index){
+            html = '<a href="#" class="uploadRemoveBtn"><i class="glyphicon glyphicon-remove"></i></a>';
+            return html;
+        }
+        function init(){
+            $.ajax({
+                url: apiURI+'getuploads',
+                type: "GET",
+                dataType: "JSON",
+                success: function(response){
+                    r = response;
+                    populateUploads(response);
+                },
+                error: function(response){
+                    console.log("Error");
+                    console.log(response);
+                }
+            });
+        }
+        function populateUploads(response){
+            uploadsTable.bootstrapTable({
+                columns: uploadsColumns,
+                data: response,
+                clickToSelect: true,
+                pagination: true,
+                pageSize: 10,
+                search: true,
+                showColumns: true,
+                showToggle: true,
+                singleSelect: true,
+                idField: "id",
+                uniqueId: "id", 
+            });
+            uploadsTable.bootstrapTable('hideLoading');
+            bindUploadRemoveBtn();
+        }
+        function bindUploadRemoveBtn(){
+            $(".uploadRemoveBtn").on("click",function(e){
+                removeUpload($(this).parents("tr:first").attr("data-uniqueid"));
+            });
+        }
+        function unbindUploadRemoveBtn(){
+            $(".uploadRemoveBtn").off("click");
+        }
+        function removeUpload(id){
+            unbindUploadRemoveBtn();
+            var proceed = confirm("Delete Uploaded File with id # "+id+"? (This may affect some features like shapefiles)");
+            if(proceed){
+                $.ajax({
+                    url: apiURI+'removeupload',
+                    data: 'csrfmiddlewaretoken='+csrftoken+'&id='+id,
+                    type: "POST",
+                    dataType: "JSON",
+                    success: function(response){
+                        r = response;
+                        processResponse(r);
+                    },
+                    error: function(response){
+                        console.log("Error:");
+                        console.log(response);
+                    }
+                });
+                function processResponse(r){
+                    if(r.status == "success"){
+                        uploadsTable.bootstrapTable('removeByUniqueId',id);
+                        showNotification("Removed Successfully!","success");
+                    }else{
+                        if(r.status == "error"){
+                            showNotification("Error Occured!","error");
+                        }else{
+                            showNotification("Unknown Status Code!");
+                            console.log(r);
+                        }
+                    }
+                }
+            }
+            bindUploadRemoveBtn();
+        }
+        init();
+    });
+</script>
 {% endblock %}
