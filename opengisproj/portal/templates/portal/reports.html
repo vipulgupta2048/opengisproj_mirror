@@ -56,6 +56,23 @@
                         <button class="btn btn-primary form-control" id="showAllBtn">Show All</button>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="form-group">
+                        <button class="form-control" id="distanceToggle" data-status="hidden" disabled>Toggle Distance Measurer</button>
+                    </div>
+                    <div class="form-group" style="display:none;">
+                        <label for="distancBegin">Start:</label>
+                        <input id="distanceBegin" class="form-control" type="text" disabled>
+                    </div>
+                    <div class="form-group" style="display:none;">
+                        <label for="distanceEnd">End:</label>
+                        <input id="distanceEnd" class="form-control" type="text" disabled>
+                    </div>
+                    <div class="form-group" style="display:none;">
+                        <label for="distanceDistance">Calculated Distance:</label>
+                        <input id="distanceDistance" class="form-control" type="text" disabled>
+                    </div>
+                </div>
                 <div class="row width-100-p">
                     <table id="gisDataTable" data-is-editable="false" class="overflow-scroll col-xs-12"></table>
                 </div>
@@ -63,8 +80,8 @@
             <section class="pull-left height-100 col-md-9 no-padding">
                 <div class="container height-inherit no-margin no-padding width-100-p">
                     <div id="gisMap" class="height-inherit">
+                    </div>               
                     </div>
-                </div>
             </section>
         </div>
         <div class="modal fade" tabindex="-1" role="dialog" id="gisModal">
@@ -85,7 +102,7 @@
 {% endblock %}
 
 {% block js %}
-<script src="https://maps.googleapis.com/maps/api/js?v=3.29&key=AIzaSyD2DVlvcLu7o2m-6OhfbipppHEzRofJh48&callback=initMap"async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?v=3.29&key=AIzaSyD2DVlvcLu7o2m-6OhfbipppHEzRofJh48&libraries=geometry&callback=initMap"async defer></script>
 <script>
     var map;                                //Stores Map Instance
     var mapsContainer = $("#gisMap")[0];    //Default Map Container
@@ -95,10 +112,15 @@
     var curr_data = [], columns = [], curr_markers = [];
     var dataGroupSelect = $(".gisDataGroupSelect");
     var shapeSelect = $("#shapeSelector");
-    // Used to hide features as in places of interest, businesses, building names and labels, arterial roads and labels
+    var distMarker1, distMarker2, distanceLine;  //Used for specifically for distance measurer utility
+    // Used to hide features as in places of interest,neighbourdhood landmarks, businesses, building labels, arterial labels and icons
     var styles = {
         default: null,
         hide: [
+          { 
+           featureType: 'administrative.neighborhood',
+           stylers: [{ visibility: 'off' }] 
+          },
           {
             featureType: 'poi.business',
             stylers: [{visibility: 'off'}]
@@ -129,6 +151,11 @@
             featureType: 'road.local',
             elementType: 'labels',
             stylers: [{visibility: 'off'}]
+          },
+          { 
+            featureType: 'road', 
+            elementType: 'labels.icon', 
+            stylers: [{ visibility: 'off' }] 
           }
         ]
     };
@@ -146,16 +173,23 @@
             center: {lat: cent_lat, lng: cent_long },
             zoom: 5,
             scrollwheel: false,                   // Maps doesn't zoom accidentally while scrolling when true 
-            zoomControl: true,                    // Toggles zoom control buttons visiblity; increases/decreases zoom
+            zoomControl: true,                    // Toggles zoom control buttons visiblity; increases/decreases zoom;postion left-centered
+            zoomControlOptions: {
+               position: google.maps.ControlPosition.LEFT_CENTER
+            },
             scaleControl: true,                   // Toggles scale bar visiblity; shows current scale of the map
             mapTypeControl: true,                 // Toggles the modes of the map from sattelite to terrain.  
             panControl: false,                    // Toggles pan control visiblity; used to navigate around the map
-            streetViewControl: false,             // Toggles street view control visiblity; used to see how the environment looks at street level
+            streetViewControl: false,             // Toggles street view control visiblity; see how the environment looks at street level
             overviewMapControl: false,            // Toggles overview indicator visiblity 
             fullscreenControl: true,              // Toggles full screen control visiblity; views map in full screen
             rotateControl: false                  // Toggles rotate control visiblity 
         });
+        
+        map.controls[google.maps.ControlPosition.TOP_CENTER].push(
+            document.getElementById('info'));
         map_loaded = true;  //Set Map is Loaded Variable
+        $("#distanceToggle").removeAttr("disabled");
         // Add controls to the map, allowing users to hide/show features.
         map.setOptions({styles: styles['hide']});
         var mapDataDefaultTimer = setInterval(function(){
@@ -171,16 +205,79 @@
                 getShapefileCoords($(this).val(), plotMapShapeData);
         });
     }
-    // Plotting shapefile, customiser of the shapefile 
+    // Distance measurer controls
+    $("#distanceToggle").click(function(e){
+        e.preventDefault();
+        var status = $(this).attr("data-status");
+        if(status == "hidden"){
+            $("#distanceBegin").parents("div:first").show();
+            $("#distanceEnd").parents("div:first").show();
+            $("#distanceDistance").parents("div:first").show();
+            
+            //Marker initalisation for measuing distance #1 
+            distMarker1 = new google.maps.Marker({
+                map: map,
+                icon: {url:"https://maps.gstatic.com/mapfiles/ms2/micons/purple-pushpin.png",  // Marker URL #pushpin
+                origin: new google.maps.Point(-6,0)     // Origin of the marker 
+                }, 
+                draggable: true,                        // Marker becomes draggable; usable in this case
+                position: {lat: 33.738, lng: 73.0844}   // Location: Islamabad, Pakistan
+            });
+
+            //Marker initalisation for measuing distance #2
+            distMarker2 = new google.maps.Marker({
+                map: map,
+                icon: {url:"https://maps.gstatic.com/mapfiles/ms2/micons/purple-pushpin.png",  // Marker URL #pushpin
+                origin: new google.maps.Point(-6,0)    // Origin of the marker
+                },
+                draggable: true,                       // Marker becomes draggable; usable in this case
+                position: {lat: 34.543, lng: 69.16066} // Location: Kabul, Afghanistan
+            });
+            google.maps.event.addListener(distMarker1, 'position_changed', updateDistance);
+            google.maps.event.addListener(distMarker2, 'position_changed', updateDistance);
+            //Plotting the line between distance markers, customiser
+            distanceLine = new google.maps.Polyline({
+                strokeColor: '#8A2BE2',               // hexadecimal code of color Violet; Violet to match markers
+                strokeOpacity: 1.0,                   // Defines opacity of the polyline
+                strokeWeight: 4,                      // Thickness of the polyline
+                map: map,
+            });
+            updateDistance();                         // Calling function updateDistance i.e defined later 
+            // Distance measurer controls
+            $(this).attr("data-status","visible");
+        }else{
+            $("#distanceBegin").parents("div:first").hide();
+            $("#distanceEnd").parents("div:first").hide();
+            $("#distanceDistance").parents("div:first").hide();
+            
+            distMarker1.setMap(null);
+            distMarker2.setMap(null);
+            distanceLine.setMap(null);
+            $(this).attr("data-status","hidden");
+        }
+    });
+    // Function for updating,showing and storing distance, origin and destination coordinates   
+    function updateDistance() {
+        var path = [distMarker1.getPosition(), distMarker2.getPosition()];
+        var distance = google.maps.geometry.spherical.computeDistanceBetween(distMarker1.getPosition(), distMarker2.getPosition())/1000;
+        distanceLine.setPath(path);
+        var formattedDist = Math.round(distance*100)/100 + " kms";  // The distance is measured in Meters and later converted into Kilometers using the formula  
+        $("#distanceDistance").val(formattedDist);
+        $("#distanceBegin").val(path[0].toString());
+        $("#distanceEnd").val(path[1].toString());
+      }
+      
+    // Plotting the shapefile uploaded, customiser 
     function plotMapShapeData(data){
         $.each(data,function(i,v){
             var shapeData = v;
             var path = new google.maps.Polyline({
                 path:shapeData,
-                geodesic: true,
-                strokeColor: '#FF0000',
-                strokeOpacity: 6.0,
-                strokeWeight: 3
+                geodesic: true,               // When true, edges of the polyline will follow the curvature of the Earth                    
+                clickable: false,             // Polyline is no longer clickable
+                strokeColor: '#FF0000',       // Hexdecimal code for color red
+                strokeOpacity: 1.0,           // Opacity of polyline; range 0.0 to 1.0
+                strokeWeight: 4               // Thickness of polyline
             });
             var timer = setInterval(function(){
                 if(map_loaded){
@@ -211,32 +308,32 @@
             var marker = new google.maps.Marker({
                 position: coord,
                 map: map,
-                icon: {url:"https://mts.googleapis.com/vt/icon/name=icons/spotlight/spotlight-waypoint-b.png&scale=1 //--", 
-                scaledSize: new google.maps.Size(35,60),      // size of the marker
-                origin: new google.maps.Point(0,-10)          // origin of the marker
+                icon: {url:"https://mts.googleapis.com/vt/icon/name=icons/spotlight/spotlight-waypoint-b.png&scale=1 //--", // Marker URL
+                scaledSize: new google.maps.Size(35,60),      // Size of the marker; Bigger to accomodate 3-digit ID
+                origin: new google.maps.Point(0,-10)          // Origin of the marker
                 },
-                animation: google.maps.Animation.DROP,
-                draggable: false,
+                animation: google.maps.Animation.DROP,        // Added drop animation for markers; cooler
+                draggable: false,                             // Markers NOT to be made draggable under any circumstances
                 title: v.sample_identifier,
                 label: {
-                    text: v.id,
-                    color: "black"
+                    text: v.id,                               // Text to be displayed in the label.  
+                    color: "black"                            // Default text color of the marker
                 }
             });
             marker.addListener('click', function() {
                 // Marker Click Event Listener 
-                showGisDetails(v.id);   // Show GIS Details Marker Details
+                showGisDetails(v.id);                         // Show GIS Details Marker Details
             });
-            curr_markers.push(marker);  // Add to current Markers Array
+            curr_markers.push(marker);                        // Add to current Markers Array
             // Highlights label text on mouseover for better visiblity
             google.maps.event.addListener(marker, "mouseover", function(evt) {
                 var label = this.getLabel();
-                label.color = "white";
+                label.color = "white";                        // On mouseover changes to white 
                 this.setLabel(label);
             });
             google.maps.event.addListener(marker, "mouseout", function(evt) {
                 var label = this.getLabel();
-                label.color = "black";
+                label.color = "black";                        // On mouseout changes to black
                 this.setLabel(label);
             });
             return marker;
@@ -245,10 +342,10 @@
     function clearCurrentMarkers(){
         // Clear all Markers from the Map and empty the Current Markers Array
         if(curr_markers.length<=0)
-            return false;                           // return false if there are no markers
-        for(var i=0; i<curr_markers.length; i++)    // Iterate through complete Current Markers Array
-            curr_markers[i].setMap(null);           // Remove Marker from Map
-        curr_markers = [];                          // Empty Current Markers Array
+            return false;                                     // return false if there are no markers
+        for(var i=0; i<curr_markers.length; i++)              // Iterate through complete Current Markers Array
+            curr_markers[i].setMap(null);                     // Remove Marker from Map
+        curr_markers = [];                                    // Empty Current Markers Array
     }
     function loadFilterKeys(){
         // Load Filter Keys to <select> from gisMetaFields Array 
