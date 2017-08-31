@@ -31,7 +31,7 @@
                     {% if form.errors %}<div class="alert alert-danger" role="alert">Please fix the errors!</div>{% endif %}
 
 
-                    <form method="post" action="{% url 'login' %}">
+                    <form method="post" action="{% url 'accounts:login' %}">
                         {% csrf_token %}
                         <div class="form-group {% if form.username.errors %} has-error {% endif %}">
                            <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
@@ -76,7 +76,7 @@
 
 {% block javascript %}
 <link rel="stylesheet" href="{% static 'accounts/login.css' %}">
-<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js" integrity="sha256-+u54FaX9J+k40eAcg5K2YzICSQjrEYBI9gju5nE3HfY=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 <script defer src="{% static 'accounts/particles.js' %}"></script>
 
 <script>

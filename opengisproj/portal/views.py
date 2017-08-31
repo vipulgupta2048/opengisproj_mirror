@@ -206,3 +206,6 @@ def processAjax(request, action):
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
     else:
         return JsonResponse("Invalid Action", safe=False)
+
+def pageNotFound(request):
+    return render(request, 'portal/404.html', {'url': request.path_info})

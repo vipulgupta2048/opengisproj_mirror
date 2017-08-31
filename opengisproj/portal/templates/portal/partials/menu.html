@@ -45,7 +45,7 @@
 	            <span class="icon-bar"></span>
 	            <span class="icon-bar"></span>
 	        </button>
-            <a class="navbar-brand" href="/portal/">Open GIS Project</a>
+            <a class="navbar-brand" href="{% url 'portal:home' %}">Open GIS Project</a>
 	    </div>
         <div class="collapse navbar-collapse" id="mainNav">
             <ul class="nav navbar-nav">
@@ -54,17 +54,17 @@
                     <a href="#" id='dataDropdown-toggle' class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Data Management<span class="caret"></span></a>
                     <ul class="dropdown-menu padding-20">
                         <li class="listHeader"><strong>GIS Data</strong></li>
-                        <li class="listElement"><a href="/portal/add">Add Data</a></li>
-                        <li class="listElement"><a href="/portal/browse">Browse Table</a></li>
+                        <li class="listElement"><a href="{% url 'portal:add-data' %}">Add Data</a></li>
+                        <li class="listElement"><a href="{% url 'portal:browse-data' %}">Browse Table</a></li>
                         <li role="separator" class="divider"></li>
                         <li class="listHeader"><strong>GIS Parameters</strong></li>
-                        <li class="listElement"><a href="/portal/parameters">Add/Browse Parameters</a></li>
+                        <li class="listElement"><a href="{% url 'portal:parameters' %}">Add/Browse Parameters</a></li>
                         <li role="separator" class="divider"></li>
                         <li class="listHeader"><strong>GIS Data Groups</strong></li>
-                        <li class="listElement"><a href="/portal/datagroups">Add/Browse Data Groups</a></li>
+                        <li class="listElement"><a href="{% url 'portal:datagroups' %}">Add/Browse Data Groups</a></li>
                         <li role="separator" class="divider"></li>
                         <li class="listHeader"><strong>Shapefiles</strong></li>
-                        <li class="listElement"><a href="/portal/shapefiles">Browse/Create Shapes</a></li>
+                        <li class="listElement"><a href="{% url 'portal:shapefiles' %}">Browse/Create Shapes</a></li>
                     </ul>
                 </li>
                 <li class="dropdown">
@@ -72,16 +72,16 @@
                         Data Tools<span class="caret"></span>
                     </a>
                     <ul class="dropdown-menu padding-20">
-                       <li class="listElement"><a href="/portal/importer">Import GIS Data</a></li>
-                       <li class="listElement"><a href="/portal/fileupload">Uploads Manager</a></li>
+                       <li class="listElement"><a href="{% url 'portal:importer' %}">Import GIS Data</a></li>
+                       <li class="listElement"><a href="{% url 'portal:upload-manager' %}">Uploads Manager</a></li>
                     </ul>
                 </li>
                 {% endif %}
-                <li><a href="/portal/reports">Reports</a></li>
+                <li><a href="{% url 'portal:reports' %}">Reports</a></li>
                 {% if user.is_authenticated == True %}
-                <li><a href="/account/logout/">Logout</a></li>
+                <li><a href="{% url 'accounts:logout' %}">Logout</a></li>
                 {% else %}
-                <li><a href="/account/login/">Login</a></li>
+                <li><a href="{% url 'accounts:login' %}">Login</a></li>
                 {% endif %}
             </ul>
         </div>
