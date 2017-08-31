@@ -51,9 +51,11 @@ def fileupload(request):
         form = UploadForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            return render(request, 'portal/upload.html', {'msg':"Successfully Uploaded!"})
+            form = UploadForm()
+            return render(request, 'portal/upload.html', {'msg':"Successfully Uploaded!",'form':form})
     else:
-        return HttpResponse(status=405)
+        form = UploadForm()
+        return render(request, 'portal/upload.html', {'form':form})
 def importView(request):
     if request.user.is_authenticated == False:
         return redirect('/account/login?next=/portal/importView')
@@ -189,5 +191,21 @@ def processAjax(request, action):
             return JsonResponse(res, safe=False)
         else:
             return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="getuploads":
+        if(request.method == "GET"):
+            res = get_uploaded_files()
+            return JsonResponse(res, safe=False)
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
+    elif action=="removeupload":
+        if(request.method == "POST"):
+            file_id = request.POST['id']
+            res = remove_uploaded_file(file_id)
+            return JsonResponse(res, safe=False)
+        else:
+            return JsonResponse("Form Data Missing or Invalid Request", safe=False)
     else:
         return JsonResponse("Invalid Action", safe=False)
+
+def pageNotFound(request):
+    return render(request, 'portal/404.html', {'url': request.path_info})
