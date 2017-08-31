@@ -187,6 +187,10 @@
                 getExcelDataFromMapping(file_id, data_group, mapping, readExcelData);
             });
             function readExcelData(data){
+                if(data.status!=undefined && data.status == "error"){
+                    showNotification("Error Occured: "+data.msg, "error");
+                    return false;
+                }
                 $.each(data.approved, function(i,v){
                     var html = "<tr>";
                     if (i==0){
