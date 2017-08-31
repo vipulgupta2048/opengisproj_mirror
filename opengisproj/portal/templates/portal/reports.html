@@ -7,11 +7,15 @@
   padding: 0;
   margin-left: 15px;
 }
-#test{
+#sidebar{
   margin-top: 15px;
 }
+.gis-graph{
+    width:100%;
+    height:300px;
+}
 </style>
-        <div id='test' class="row width-100-p">
+        <div id='sidebar' class="row width-100-p">
             <section class="pull-left height-100 col-md-3 overflow-scroll">
                 <div class="row">
                     <h4 class="text-center">Overlay a Shape File</h4>
@@ -73,20 +77,24 @@
                         <input id="distanceDistance" class="form-control" type="text" disabled>
                     </div>
                 </div>
-                <div class="row width-100-p">
-                    <table id="gisDataTable" data-is-editable="false" class="overflow-scroll col-xs-12"></table>
-                </div>
             </section>
             <section class="pull-left height-100 col-md-9 no-padding">
                 <div class="container height-inherit no-margin no-padding width-100-p">
                     <div id="gisMap" class="height-inherit">
                     </div>               
-                    </div>
+                </div>
             </section>
         </div>
         <div class="row">
-            <div class="col-xs-12" id="charts">
-            </div>
+            <section class="container">
+                <div class="row width-100-p padding-20-sides">
+                    <table id="gisDataTable" data-is-editable="false" class="col-xs-12"></table>
+                </div>
+            </section>
+            <section class="container">
+                <div class="row width-100-p" id="charts">
+                </div>
+            </section>    
         </div>
         <div class="modal fade" tabindex="-1" role="dialog" id="gisModal">
             <div class="modal-dialog" role="document">
@@ -106,7 +114,7 @@
 {% endblock %}
 
 {% block js %}
-<script src="https://maps.googleapis.com/maps/api/js?v=3.29&key=AIzaSyD2DVlvcLu7o2m-6OhfbipppHEzRofJh48&libraries=geometry&callback=initMap"async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?v=3.29&key=AIzaSyD2DVlvcLu7o2m-6OhfbipppHEzRofJh48&libraries=geometry&callback=initMap" async defer></script>
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script>
     var map;                                //Stores Map Instance
@@ -502,21 +510,17 @@
             });
         });
         r = temp;
-        console.log(r);
         // Load the Visualization API and the corechart package.
         google.charts.load('current', {'packages':['corechart']});
 
         // Set a callback to run when the Google Visualization API is loaded.
         google.charts.setOnLoadCallback(drawChart);
 
-
-
         // Callback that creates and populates a data table,
         //	 instantiates the pie chart, passes in the data and
         // draws it.
         function drawChart() {
             $.each(r, function(i,v){
-                console.log("Generating new graph");
                 var years = [], rows=[];
                 var label ;
                 var data = new google.visualization.DataTable();
@@ -527,20 +531,16 @@
                     years.push(value.year);
                     $.each(value, function(key, val){	
                         if(isFirst){
-                    //		console.log("Adding Columnn "+key);
                             if(key == 'sample_identifier'){
-                                //data.addColumn('string', key);
-                                //console.log("Column Added");
+                                //do nothing
                             }
                             else{
                                 if(key == 'year'){
                                     data.addColumn('date', key);
-                                    console.log("Column Added");
                                 }
                                 else{
                                     if(key != "longitude" && key !="latitude"){
                                         data.addColumn('number', key);
-                                        console.log("Column Added");
                                     }
                                 }
                             }
@@ -548,10 +548,7 @@
                         if(key!='sample_identifier' && key!='year')
                             val = parseFloat(val);
                         if(key == 'year'){
-                            
                             val = new Date(val);
-                            
-                    
                         }
                         if(key == "year" || key == "value"){
                             row.push(val);
@@ -561,30 +558,20 @@
                     rows.push(row);
                     isFirst = false;
                 });
-                
-                console.log("Unsorted:");
-                console.log(rows);
-                /** Your algo starts here **/
-                
                 function sortFunction(a , b){
-                    if (a[0] == b[0]){
-                        
-                     return (a[1] < b[1]) ? -1 : 1;
+                    if (a[0] == b[0]){                        
+                        return (a[1] < b[1]) ? -1 : 1;
                     }else{
                         return (a[0] < b[0]) ? -1 : 1;
                     } 
                 }
                 rows.sort(sortFunction); 
-                console.log(rows);
                 // Add it to graph.. 
                 data.addRows(rows);
-
                 // Set chart options
                 var options = {
                     'title': label + " Graph",
                     'curveType':'function',
-                    'width':600,
-                    'height':800,
                     'colors':['D64541'],
                     'legend': {position:'bottom'},
                     vAxes: {
@@ -596,9 +583,9 @@
                         ticks: years
                     }
                 };
-                $("#charts").append('<div id="graph-'+label+'"></div>');
-                var newChart = $("#graph-"+label)[0];
-            // Instantiate and draw our chart, passing in some options.
+                $("#charts").append('<div id="graph-'+label+'" class="col-xs-12 col-md-6"><div></div></div>');
+                var newChart = $("#graph-"+label+">div")[0];
+                // Instantiate and draw our chart, passing in some options.
                 var chart = new google.visualization.LineChart(newChart);
                 chart.draw(data, options);
             });

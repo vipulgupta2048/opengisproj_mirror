@@ -236,7 +236,7 @@ def edit_gis_data(meta_key, data_id, new_value, user):
         toReturn["status"] = "error"
         toReturn["msg"] = e
         toReturn["errcode"] = "500"
-        return toReturn
+    return toReturn
 
 def edit_gis_param(param_key, opt_id, new_value, user):
     toReturn = {}

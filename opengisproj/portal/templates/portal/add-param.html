@@ -231,7 +231,6 @@
                  * row: the record corresponding to the clicked row,
                  * $element: the td element.
                 **/
-
                 /**  Check if the element is already being edited **/
                 if(element.hasClass("edit-mode"))
                     return false;   // Return false if is being edited
@@ -256,7 +255,7 @@
                         if($(this).attr("required")!="undefined" && $(this).attr("required") == undefined){
                             html += ' required';
                         }
-                        if($(this).type="checkbox"){
+                        if($(this).type=="checkbox"){
                             if(value=="True")
                                 html += " checked";
                         }else{
@@ -283,7 +282,6 @@
                 html += '<br><i class="glyphicon glyphicon-remove pull-right icon-btn closeEditGisParamBtn"></i><i class="glyphicon'+
                     ' glyphicon-ok submitEditGisParamBtn pull-right icon-btn"></i></div>';
                 element.html(html);
-
                 var gisParamInput = element.find(".editGisParamInput");   // Select the newly created Input Element
                 /** Bind keydown handler to new element **/
                 gisParamInput.on("keydown", function(e){

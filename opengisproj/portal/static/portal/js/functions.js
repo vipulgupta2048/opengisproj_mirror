@@ -211,7 +211,6 @@ function addMetaFieldAttributes(key_name){
 function validateField(field, showErrors=true){
     if(field.attr("type") == "checkbox")
         return true;
-    console.log(field.attr("type"));
     var val = field.val();
     var len = val.length;
     /** Check Required Attribute */
