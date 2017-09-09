@@ -1,5 +1,6 @@
 import logging
-import os, errno
+import os
+import errno
 from .models import *
 import json
 import shapefile
@@ -7,17 +8,24 @@ from django.conf import settings
 import numpy as np
 import pandas as pd
 
+
 def install(user):
-    temp = options.objects.create(option_name="meta_field",value='{"key_name": "bod", "label": "BOD", "key_type": "number", "min": "", "max": "", "max_len": "", "step": "0.000001", "required": "True"}')
+    temp = options.objects.create(
+        option_name="meta_field", value='{"key_name": "bod", "label": "BOD", "key_type": "number", "min": "", "max": "", "max_len": "", "step": "0.000001", "required": "True"}')
     temp.save()
-    temp = options.objects.create(option_name="meta_field",value='{"key_name": "ph", "label": "ph Value", "key_type": "number", "min": "", "max": "", "max_len": "", "step": "0.00001", "required": "True"}')
+    temp = options.objects.create(
+        option_name="meta_field", value='{"key_name": "ph", "label": "ph Value", "key_type": "number", "min": "", "max": "", "max_len": "", "step": "0.00001", "required": "True"}')
     temp.save()
-    temp = options.objects.create(option_name="meta_field",value='{"key_name": "longitude", "label": "Longitude", "key_type": "number", "min": "-180", "max": "180", "max_len": "", "step": "0.000001", "required": "True"}', is_removable=False)
+    temp = options.objects.create(
+        option_name="meta_field", value='{"key_name": "longitude", "label": "Longitude", "key_type": "number", "min": "-180", "max": "180", "max_len": "", "step": "0.000001", "required": "True"}', is_removable=False)
     temp.save()
-    temp = options.objects.create(option_name="meta_field",value='{"key_name": "latitude", "label": "Latitude", "key_type": "number", "min": "-90", "max": "90", "max_len": "", "step": "0.000001", "required": "True"}', is_removable=False)
+    temp = options.objects.create(
+        option_name="meta_field", value='{"key_name": "latitude", "label": "Latitude", "key_type": "number", "min": "-90", "max": "90", "max_len": "", "step": "0.000001", "required": "True"}', is_removable=False)
     temp.save()
-    temp = options.objects.create(option_name="meta_field",value='{"key_name": "year", "label": "Year", "key_type": "number", "min": "1947", "max": "2100", "max_len": "", "step": ""}', is_removable=False)
+    temp = options.objects.create(
+        option_name="meta_field", value='{"key_name": "year", "label": "Year", "key_type": "number", "min": "1947", "max": "2100", "max_len": "", "step": ""}', is_removable=False)
     temp.save()
+
 
 def get_meta_fields(filterByGroup=None):
     try:
@@ -26,7 +34,8 @@ def get_meta_fields(filterByGroup=None):
         else:
             filterByGroup = int(filterByGroup)
             group = data_groups.objects.filter(id=filterByGroup)
-            data = options.objects.filter(option_name="meta_field", data_group=group)
+            data = options.objects.filter(
+                option_name="meta_field", data_group=group)
         jsonFields = []
         for d in data:
             temp = {}
@@ -45,20 +54,23 @@ def get_meta_fields(filterByGroup=None):
         toReturn["errcode"] = "500"
         return toReturn
 
+
 def get_meta():
     try:
-        gis_objects = gis_data.objects.all()    #Fetch all rows from gis_data
-        arr = []    #Create a new array to return
+        gis_objects = gis_data.objects.all()  # Fetch all rows from gis_data
+        arr = []  # Create a new array to return
         for x in gis_objects:
-            obj = {}    #Create new empty dictionary
+            obj = {}  # Create new empty dictionary
             gis_id = x.id
-            obj["id"] = str(gis_id)  #Add Id to dictionary
+            obj["id"] = str(gis_id)  # Add Id to dictionary
             obj["data_group"] = str(x.data_group.id)
-            gis_meta = gis_data_meta.objects.filter(data=gis_id)    #Fetch all rows from gis_data_meta that contain data for gis_id 
+            # Fetch all rows from gis_data_meta that contain data for gis_id
+            gis_meta = gis_data_meta.objects.filter(data=gis_id)
             for y in gis_meta:
-                obj[y.key] = y.value    #Add Every Key to dictionary with it's value
-            arr.append(obj)    #Add Current Dictionary to arr
-        return arr  #return the final arr
+                # Add Every Key to dictionary with it's value
+                obj[y.key] = y.value
+            arr.append(obj)  # Add Current Dictionary to arr
+        return arr  # return the final arr
     except Exception as e:
         toReturn = {}
         toReturn["status"] = "error"
@@ -66,13 +78,14 @@ def get_meta():
         toReturn["errcode"] = "500"
         return toReturn
 
+
 def is_meta_key(key, data_group):
-    try: 
+    try:
         fields = get_meta_fields()
         flag = False
         for x in fields:
             print(x['data_group'])
-            if x['key_name'] == key and str(x['data_group']) == data_group :
+            if x['key_name'] == key and str(x['data_group']) == data_group:
                 flag = True
                 break
         return flag
@@ -83,6 +96,7 @@ def is_meta_key(key, data_group):
         toReturn["errcode"] = "500"
 
     return toReturn
+
 
 def add_new_data(post_data, request_user, ret_json=False):
     toReturn = {}
@@ -98,11 +112,13 @@ def add_new_data(post_data, request_user, ret_json=False):
             val = post_data[key]
             if(is_meta_key(key, post_data["data_group"])):
                 if(is_first):
-                    g = gis_data.objects.create(created_by=request_user, data_group = group_id)
+                    g = gis_data.objects.create(
+                        created_by=request_user, data_group=group_id)
                     g.save()
                     gis_id = g
-                    is_first=False
-                m = gis_data_meta.objects.create(key=key, value=val, data=gis_id)
+                    is_first = False
+                m = gis_data_meta.objects.create(
+                    key=key, value=val, data=gis_id)
                 m.save()
         if(ret_json):
             toReturn["status"] = "success"
@@ -117,7 +133,8 @@ def add_new_data(post_data, request_user, ret_json=False):
 
     return toReturn
 
-def get_data_groups(): 
+
+def get_data_groups():
     try:
         groups = data_groups.objects.all()
         arr = []
@@ -126,16 +143,17 @@ def get_data_groups():
             obj['id'] = x.id
             obj['name'] = x.name
             obj['is_removable'] = x.is_removable
-            arr.append(obj)        
+            arr.append(obj)
         return arr
     except Exception as e:
         return e
+
 
 def add_param(data, user):
     toReturn = {}
     param = {}
     removable = False
-    if(is_meta_key(data['key_name'],data['data_group'])):
+    if(is_meta_key(data['key_name'], data['data_group'])):
         toReturn["status"] = "error"
         toReturn["message"] = "Key Already Exists"
         toReturn["errcode"] = "KEY_EXISTS"
@@ -143,18 +161,19 @@ def add_param(data, user):
         for x in data:
             key = x
             val = data[x]
-            if x=="csrfmiddlewaretoken":
+            if x == "csrfmiddlewaretoken":
                 continue
-            if x=="required":
-                val="True"
-            if x=="is_removable":
+            if x == "required":
+                val = "True"
+            if x == "is_removable":
                 removable = True
                 continue
             param[key] = val
         try:
             group_id = data_groups.objects.filter(id=data["data_group"])[0]
             jsonParam = json.dumps(param)
-            p = options.objects.create(option_name="meta_field",value=jsonParam, is_removable = removable, data_group = group_id)
+            p = options.objects.create(
+                option_name="meta_field", value=jsonParam, is_removable=removable, data_group=group_id)
             p.save()
             toReturn["status"] = "success"
             toReturn["message"] = str(p.id)
@@ -165,9 +184,10 @@ def add_param(data, user):
 
     return toReturn
 
+
 def remove_param(option_id, group_id, user):
     try:
-        obj = options.objects.filter(id=option_id, data_group = group_id)
+        obj = options.objects.filter(id=option_id, data_group=group_id)
         toReturn = {}
         if not obj:
             toReturn['status'] = "error"
@@ -177,11 +197,12 @@ def remove_param(option_id, group_id, user):
             if(obj[0].is_removable):
                 fields = json.loads(str(obj[0].value))
                 keyName = fields['key_name']
-                gis_data_objects = gis_data.objects.filter(data_group = group_id)
+                gis_data_objects = gis_data.objects.filter(data_group=group_id)
                 for gis_obj in gis_data_objects:
-                    meta_rows = gis_data_meta.objects.filter(key=keyName, data=gis_obj)
+                    meta_rows = gis_data_meta.objects.filter(
+                        key=keyName, data=gis_obj)
                     meta_rows.delete()
-                obj.delete()  
+                obj.delete()
                 toReturn['status'] = "success"
             else:
                 toReturn['status'] = "error"
@@ -193,6 +214,7 @@ def remove_param(option_id, group_id, user):
         toReturn["errcode"] = "500"
 
     return toReturn
+
 
 def remove_gis_data(data_id, user):
     try:
@@ -220,6 +242,7 @@ def remove_gis_data(data_id, user):
 
     return toReturn
 
+
 def edit_gis_data(meta_key, data_id, new_value, user):
     try:
         obj = gis_data_meta.objects.get(key=meta_key, data=data_id)
@@ -237,6 +260,7 @@ def edit_gis_data(meta_key, data_id, new_value, user):
         toReturn["msg"] = e
         toReturn["errcode"] = "500"
     return toReturn
+
 
 def edit_gis_param(param_key, opt_id, new_value, user):
     toReturn = {}
@@ -268,13 +292,15 @@ def edit_gis_param(param_key, opt_id, new_value, user):
         toReturn["errcode"] = "500"
     return toReturn
 
+
 def add_data_group(data, user):
     toReturn = {}
     try:
         removable = False
         if 'is_removable' in data:
             removable = True
-        group = data_groups.objects.create(name=data['group_name'],is_removable=removable)
+        group = data_groups.objects.create(
+            name=data['group_name'], is_removable=removable)
         group.save()
         toReturn['status'] = "success"
         toReturn['message'] = group.id
@@ -283,6 +309,7 @@ def add_data_group(data, user):
         toReturn["msg"] = e
         toReturn["errcode"] = "500"
     return toReturn
+
 
 def remove_data_group(group_id, user):
     toReturn = {}
@@ -313,6 +340,7 @@ def remove_data_group(group_id, user):
         toReturn["errcode"] = "500"
     return toReturn
 
+
 def edit_data_group(group_id, key, new_value, user):
     toReturn = {}
     try:
@@ -332,13 +360,14 @@ def edit_data_group(group_id, key, new_value, user):
         toReturn["errcode"] = "500"
     return toReturn
 
+
 def shapefile_reader(shape_id):
     try:
         shapeDb = shapefiles.objects.filter(id=int(shape_id))[0]
-        MEDIA_ROOT = settings.MEDIA_ROOT.replace('\\','/')+'/'
-        shpFile = open(MEDIA_ROOT+str(shapeDb.shp_file.file_ref), "rb")
-        dbfFile = open(MEDIA_ROOT+str(shapeDb.dbf_file.file_ref), "rb")
-        shxFile = open(MEDIA_ROOT+str(shapeDb.shx_file.file_ref),"rb")
+        MEDIA_ROOT = settings.MEDIA_ROOT.replace('\\', '/') + '/'
+        shpFile = open(MEDIA_ROOT + str(shapeDb.shp_file.file_ref), "rb")
+        dbfFile = open(MEDIA_ROOT + str(shapeDb.dbf_file.file_ref), "rb")
+        shxFile = open(MEDIA_ROOT + str(shapeDb.shx_file.file_ref), "rb")
         sf = shapefile.Reader(shp=shpFile, dbf=dbfFile)
         shapes = sf.shapes()
         data = []
@@ -346,11 +375,13 @@ def shapefile_reader(shape_id):
             curr_shape = sf.shape(x)
             pairs = []
             for point in range(len(curr_shape.points)):
-                pairs.append({"lat":curr_shape.points[point][1], "lng":curr_shape.points[point][0]})
+                pairs.append(
+                    {"lat": curr_shape.points[point][1], "lng": curr_shape.points[point][0]})
             data.append(pairs)
         return data
     except Exception as e:
         return str(e)
+
 
 def getuploadedshapefiles():
     try:
@@ -367,6 +398,7 @@ def getuploadedshapefiles():
     except Exception as e:
         return "Error"
 
+
 def create_new_shape(data):
     toReturn = {}
     try:
@@ -377,13 +409,15 @@ def create_new_shape(data):
         dbfFile = uploads.objects.filter(id=dbf_file_id)[0]
         shxFile = uploads.objects.filter(id=shx_file_id)[0]
         shape_name = data['shape_name']
-        shape = shapefiles.objects.create(shape_name=shape_name, shp_file = shpFile, shx_file = shxFile, dbf_file = dbfFile)
+        shape = shapefiles.objects.create(
+            shape_name=shape_name, shp_file=shpFile, shx_file=shxFile, dbf_file=dbfFile)
         toReturn['status'] = "success"
         toReturn['msg'] = shape.id
     except Exception as e:
         toReturn['status'] = "error"
         toReturn['msg'] = str(e)
     return toReturn
+
 
 def get_shapes():
     try:
@@ -398,12 +432,13 @@ def get_shapes():
     except Exception as e:
         return str(e)
 
+
 def import_gis_data(file_id):
     try:
         file_id = int(file_id)
         file_path = uploads.objects.filter(id=file_id)[0]
-        MEDIA_ROOT = settings.MEDIA_ROOT.replace('\\','/')+'/'
-        Location = MEDIA_ROOT+str(file_path.file_ref)
+        MEDIA_ROOT = settings.MEDIA_ROOT.replace('\\', '/') + '/'
+        Location = MEDIA_ROOT + str(file_path.file_ref)
         df = pd.read_excel(Location, 0, index_col='Sl. No')
         excelFields = df.columns
         temp = []
@@ -414,14 +449,15 @@ def import_gis_data(file_id):
     except Exception as e:
         return str(e)
 
+
 def get_excel_data_from_mapping(mapping, file_id, data_group):
     try:
         mappingString = mapping
         mappingObjects = json.loads(mappingString)
         metaFields = get_meta_fields(data_group)
-    
+
     except Exception as e:
-        return {"status":"Error", "msg": str(e)}
+        return {"status": "Error", "msg": str(e)}
 
     def get_meta_attributes(meta_key):
         for x in metaFields:
@@ -437,38 +473,40 @@ def get_excel_data_from_mapping(mapping, file_id, data_group):
     rejected = []
     try:
         file_path = uploads.objects.filter(id=file_id)[0]
-        MEDIA_ROOT = settings.MEDIA_ROOT.replace('\\','/')+'/'
-        Location = MEDIA_ROOT+str(file_path.file_ref)
+        MEDIA_ROOT = settings.MEDIA_ROOT.replace('\\', '/') + '/'
+        Location = MEDIA_ROOT + str(file_path.file_ref)
         df = pd.read_excel(Location, 0, index_col='Sl. No')
     except Exception as e:
-        return {"status":"Error", "msg": str(e)}
+        return {"status": "Error", "msg": str(e)}
     for row in df.itertuples():
         obj = {}
         flag = 0
         for x in mappingObjects:
-            db_key = x['db_key']    #select current db key from array
+            db_key = x['db_key']  # select current db key from array
             excel_key = x['excel_key']
-            attr = get_meta_attributes(db_key) #Get it's attributes array of db_key
+            # Get it's attributes array of db_key
+            attr = get_meta_attributes(db_key)
             if excel_key == "None" and attr['required'].lower() == "true":
                 flag = 1
                 continue
-            elif excel_key == "None":    
+            elif excel_key == "None":
                 continue
             excel_header = db_key
             try:
                 excel_val = df.loc[row.Index][excel_key]
             except Exception as e:
-                return {"status":"Error", "msg": str(e)}
+                return {"status": "Error", "msg": str(e)}
             if attr['key_name'] == db_key:
                 obj[attr['key_name']] = str(excel_val)
                 try:
                     if attr['key_type'] == 'number':
                         val = float(excel_val)
-                        if attr['step']!= '':
+                        if attr['step'] != '':
                             step = float(attr['step'])
-                            prec = int(len(str(step))- len(str(np.floor(step)))+1)
-                            excel_val = round(excel_val,prec)
-                        if excel_val != '' and attr['min']!='' and attr['max']!='':
+                            prec = int(len(str(step)) -
+                                       len(str(np.floor(step))) + 1)
+                            excel_val = round(excel_val, prec)
+                        if excel_val != '' and attr['min'] != '' and attr['max'] != '':
                             if float(excel_val) < float(attr['min']) or float(excel_val) > float(attr['max']):
                                 flag = 1
                     elif attr['key_type'] == 'text' and attr['max_len'] != '':
@@ -484,6 +522,7 @@ def get_excel_data_from_mapping(mapping, file_id, data_group):
     excelData["rejected"] = rejected
     return excelData
 
+
 def get_excel_files():
     try:
         sheets = uploads.objects.filter(file_meta="excel_file")
@@ -497,6 +536,7 @@ def get_excel_files():
         return data
     except Exception as e:
         return str(e)
+
 
 def get_uploaded_files():
     try:
@@ -515,15 +555,16 @@ def get_uploaded_files():
     except Exception as e:
         return "Error:" + str(e)
 
+
 def remove_uploaded_file(file_id):
     try:
         file_id = int(file_id)
         try:
-            u_file = uploads.objects.get(id = file_id)
+            u_file = uploads.objects.get(id=file_id)
         except DoesNotExist as e:
-            return {'status':'error', 'msg':'File Not Found','errcode':'FILE_NOT_FOUND'}
-        MEDIA_ROOT = settings.MEDIA_ROOT.replace('\\','/')+'/'
-        Location = MEDIA_ROOT+str(u_file.file_ref)
+            return {'status': 'error', 'msg': 'File Not Found', 'errcode': 'FILE_NOT_FOUND'}
+        MEDIA_ROOT = settings.MEDIA_ROOT.replace('\\', '/') + '/'
+        Location = MEDIA_ROOT + str(u_file.file_ref)
         try:
             os.remove(Location)
         except OSError as e:
@@ -534,5 +575,5 @@ def remove_uploaded_file(file_id):
                 raise
         u_file.delete()
         return {"status": "success"}
-    except Exception as e:  
-        return {"status":'error', "msg":str(e)}
+    except Exception as e:
+        return {"status": 'error', "msg": str(e)}
