@@ -3,6 +3,9 @@ GIS Open Source Project.
 This project uses Postgresql. Install postgresql server and pgadmin4 for easy
 management of database during development phase
 
+# Demonstration
+For a brief overview of all the features included in the website, please refer to the Demo folder in the repository.   
+
 # How to Install
 
 ### Create a virtual environemnt to start with.
