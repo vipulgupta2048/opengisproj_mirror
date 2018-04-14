@@ -1,10 +1,15 @@
-﻿# Yamuna River GIS Project [Private]
-GIS Open Source Project.
-This project uses Postgresql. Install postgresql server and pgadmin4 for easy
-management of database during development phase
+# Disclaimer
+This is public mirror to the private project "Opengisproj" created on GitHub under the user @thisisayush forked by @vipulgupta2048 with the intention of collaboration and development on the project "Opengisproj". The mirror is created only for referencial purposes and is strictly not meant for redistributing commecially and neither to be procured for personal or commercial use. Aiming to only represent the work done by the collaborators. The development and latest commits for Opengisproj are [here](https://github.com/thisisayush/opengisproj). (Private) 
 
-# Demonstration
-For a brief overview of all the features included in the website, please refer to the Demo folder in the repository.   
+The work done by the collaborators is to be considered only as v1. This mirror will not be updated further. 
+Licensed under GNU General Public License (GPL) v3 or later. Check [COPYING](https://github.com/vipulgupta2048/opengisproj_mirror/blob/master/COPYING) and [LICENSE](https://github.com/vipulgupta2048/opengisproj_mirror/blob/master/LICENSE) for the same. 
+For any queries: mailto:vipulgupta2048@gmail.com  
+
+# Yamuna River GIS Project [Private]
+GIS Open Source Project  
+This project uses Postgresql. Install postgresql server and pgadmin4 for easy management of database during development phase
+Edit - First prize awarded in the competition "Making a Web App using GIS and FOSS" 
+Thanks for contributing everybody !!
 
 # How to Install
 
